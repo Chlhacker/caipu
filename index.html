@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#f97316">
+    <title>🍳 菜谱助手</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #fff7ed;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 头部导航 */
+        .header {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .nav {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 0.5rem;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-btn.active {
+            background: white;
+            color: #f97316;
+            border-color: white;
+        }
+
+        .badge {
+            position: absolute;
+            top: -0.5rem;
+            right: -0.5rem;
+            background: #ef4444;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 1rem;
+            min-width: 1.2rem;
+            text-align: center;
+        }
+
+        /* 主内容区 */
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 左侧分类导航 */
+        .sidebar {
+            width: 200px;
+            background: #fff7ed;
+            border-right: 2px solid #fed7aa;
+            padding: 1rem 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-title {
+            padding: 0 1rem;
+            font-size: 0.875rem;
+            color: #9a3412;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .category-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            color: #7c2d12;
+        }
+
+        .category-item:hover {
+            background: #ffedd5;
+        }
+
+        .category-item.active {
+            background: #fed7aa;
+            border-left-color: #f97316;
+            color: #ea580c;
+            font-weight: 600;
+        }
+
+        .category-count {
+            float: right;
+            background: #f97316;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 1rem;
+            min-width: 1.5rem;
+            text-align: center;
+        }
+
+        .cart-item {
+            border: 1px solid #ffedd5;
+        }
+
+        /* 右侧内容区 */
+        .content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 120px;
+                padding: 0.5rem 0;
+            }
+
+            .sidebar-title {
+                font-size: 0.75rem;
+                padding: 0 0.5rem;
+            }
+
+            .category-item {
+                padding: 0.5rem;
+                font-size: 0.85rem;
+            }
+
+            .category-count {
+                font-size: 0.65rem;
+                padding: 0.1rem 0.35rem;
+            }
+
+            .content {
+                padding: 0.75rem;
+            }
+        }
+
+        /* 添加按钮 */
+        .add-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+            margin-bottom: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .add-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 表单卡片 */
+        .form-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.1);
+            border: 1px solid #fed7aa;
+            margin-bottom: 1rem;
+        }
+
+        .form-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #f97316;
+        }
+
+        /* 图片上传 */
+        .image-upload {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            border: 2px dashed #fed7aa;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff7ed;
+        }
+
+        .image-upload:hover {
+            border-color: #f97316;
+            background: #ffedd5;
+        }
+
+        .image-upload input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .image-upload-placeholder {
+            text-align: center;
+            color: #9a3412;
+        }
+
+        .image-upload-placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+
+        .image-remove {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #f97316;
+            color: white;
+            border: none;
+            padding: 0.875rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:active {
+            background: #ea580c;
+        }
+
+        /* 菜品卡片 */
+        .dish-card {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.1);
+            border: 1px solid #ffedd5;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+
+        .dish-card:hover {
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+            border-color: #fed7aa;
+        }
+
+        .dish-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .dish-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .dish-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.625rem;
+            border-radius: 1rem;
+            background: #ffedd5;
+            color: #9a3412;
+        }
+
+        .tag-difficulty {
+            background: #fed7aa;
+            color: #7c2d12;
+            font-weight: 600;
+        }
+
+        .tag-category {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 0.875rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .dish-steps {
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            white-space: pre-line;
+        }
+
+        .cart-btn {
+            width: 100%;
+            background: #f97316;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .cart-btn:active {
+            background: #ea580c;
+        }
+
+        /* 空状态 */
+        .empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #9ca3af;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* 购物车 */
+        .cart-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+        }
+
+        .cart-item {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 1rem;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .item-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .quantity-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .quantity-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .qty-btn {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            border: none;
+            background: #e5e7eb;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .qty-btn:active {
+            background: #d1d5db;
+        }
+
+        .quantity {
+            font-weight: 600;
+            min-width: 2rem;
+            text-align: center;
+        }
+
+        .total-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-top: 1.5rem;
+        }
+
+        .total-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .total-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .total-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f97316;
+        }
+
+        .order-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+
+        .order-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 隐藏类 */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app">
+        <header class="header">
+            <div class="header-content">
+                <h1>🍳 菜谱助手</h1>
+                <nav class="nav">
+                    <button class="nav-btn" :class="{active: view === 'dishes'}" @click="view = 'dishes'">
+                        菜品
+                    </button>
+                    <button class="nav-btn" :class="{active: view === 'cart'}" @click="view = 'cart'">
+                        购物车
+                        <span v-if="cartCount > 0" class="badge">{{ cartCount }}</span>
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- 左侧分类导航 -->
+            <aside class="sidebar">
+                <div class="sidebar-title">菜品分类</div>
+                <div 
+                    v-for="cat in categories" 
+                    :key="cat"
+                    class="category-item"
+                    :class="{active: currentCategory === cat}"
+                    @click="currentCategory = cat"
+                >
+                    {{ cat }}
+                    <span class="category-count">{{ getCategoryCount(cat) }}</span>
+                </div>
+            </aside>
+
+            <!-- 右侧内容区 -->
+            <div class="content">
+            <!-- 菜品页面 -->
+            <div v-show="view === 'dishes'">
+                <button class="add-btn" @click="toggleForm">
+                    {{ showForm ? '取消' : '+ 添加新菜品' }}
+                </button>
+
+                <!-- 添加表单 -->
+                <div v-show="showForm" class="form-card">
+                    <h3>录入新菜品</h3>
+                    <form @submit.prevent="addDish">
+                        <div class="form-group">
+                            <label class="form-label">菜品图片</label>
+                            <div class="image-upload">
+                                <input type="file" accept="image/*" @change="handleImageUpload">
+                                <div v-if="!newDish.image" class="image-upload-placeholder">
+                                    <div class="image-upload-placeholder-icon">📷</div>
+                                    <div>点击上传菜品图片</div>
+                                </div>
+                                <img v-else :src="newDish.image" class="image-preview">
+                                <button v-if="newDish.image" type="button" class="image-remove" @click="removeImage">✕</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">菜品分类 *</label>
+                            <select v-model="newDish.category" class="form-select" required>
+                                <option value="">请选择分类</option>
+                                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">菜名 *</label>
+                            <input v-model="newDish.name" type="text" class="form-input" placeholder="例如：宫保鸡丁" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">标签（逗号分隔）</label>
+                            <input v-model="newDish.tagsStr" type="text" class="form-input" placeholder="例如：川菜,辣,荤菜">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">难度</label>
+                            <select v-model="newDish.difficulty" class="form-select">
+                                <option>简单</option>
+                                <option>中等</option>
+                                <option>困难</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">制作步骤</label>
+                            <textarea v-model="newDish.steps" class="form-textarea" placeholder="每行一个步骤&#10;1. 准备食材&#10;2. 处理食材&#10;3. 烹饪..."></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">保存菜品</button>
+                    </form>
+                </div>
+
+                <!-- 菜品列表 -->
+                <div v-if="filteredDishes.length === 0" class="empty">
+                    <div class="empty-icon">🍽️</div>
+                    <p>{{ currentCategory }}分类下还没有菜品<br>点击上方按钮添加吧！</p>
+                </div>
+
+                <div v-for="dish in filteredDishes" :key="dish.id" class="dish-card">
+                    <img v-if="dish.image" :src="dish.image" class="dish-image">
+                    <div class="dish-header">
+                        <div>
+                            <div class="dish-name">{{ dish.name }}</div>
+                            <div class="tags">
+                                <span class="tag tag-category">{{ dish.category }}</span>
+                                <span v-for="tag in dish.tags" :key="tag" class="tag">{{ tag }}</span>
+                                <span class="tag tag-difficulty">{{ dish.difficulty }}</span>
+                            </div>
+                        </div>
+                        <button class="delete-btn" @click="deleteDish(dish.id)">删除</button>
+                    </div>
+                    <div v-if="dish.steps" class="dish-steps">{{ dish.steps }}</div>
+                    <button class="cart-btn" @click="addToCart(dish)">加入购物车</button>
+                </div>
+            </div>
+
+            <!-- 购物车页面 -->
+            <div v-show="view === 'cart'">
+                <h2 class="cart-title">购物车</h2>
+
+                <div v-if="cart.length === 0" class="empty">
+                    <div class="empty-icon">🛒</div>
+                    <p>购物车是空的<br>去菜品页面添加想做的菜吧！</p>
+                </div>
+
+                <div v-else>
+                    <div v-for="item in cart" :key="item.id" class="cart-item">
+                        <img v-if="item.image" :src="item.image" class="dish-image">
+                        <div class="item-header">
+                            <div>
+                                <div class="item-name">{{ item.name }}</div>
+                                <div class="tags">
+                                    <span class="tag tag-category">{{ item.category }}</span>
+                                    <span v-for="tag in item.tags" :key="tag" class="tag">{{ tag }}</span>
+                                </div>
+                            </div>
+                            <button class="remove-btn" @click="removeFromCart(item.id)">✕</button>
+                        </div>
+                        <div class="quantity-control">
+                            <span class="quantity-label">数量:</span>
+                            <div class="quantity-buttons">
+                                <button class="qty-btn" @click="decreaseQty(item)">-</button>
+                                <span class="quantity">{{ item.quantity }}</span>
+                                <button class="qty-btn" @click="increaseQty(item)">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="total-card">
+                        <div class="total-info">
+                            <span class="total-label">总计</span>
+                            <span class="total-value">{{ totalItems }} 道菜</span>
+                        </div>
+                        <button class="order-btn" @click="placeOrder">确认下单</button>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    view: 'dishes',
+                    showForm: false,
+                    categories: ['现炒肉类', '蔬菜', '炖汤', '烧烤', '饮料', '小吃', '内蒙风味'],
+                    currentCategory: '现炒肉类',
+                    dishes: [],
+                    cart: [],
+                    newDish: {
+                        name: '',
+                        category: '',
+                        image: '',
+                        tagsStr: '',
+                        difficulty: '简单',
+                        steps: ''
+                    }
+                }
+            },
+            computed: {
+                cartCount() {
+                    return this.cart.reduce((sum, item) => sum + item.quantity, 0);
+                },
+                totalItems() {
+                    return this.cart.reduce((sum, item) => sum + item.quantity, 0);
+                },
+                filteredDishes() {
+                    return this.dishes.filter(dish => dish.category === this.currentCategory);
+                }
+            },
+            mounted() {
+                this.loadData();
+                // 注册 Service Worker（PWA 支持）
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js').catch(() => {});
+                }
+            },
+            methods: {
+                loadData() {
+                    const savedDishes = localStorage.getItem('dishes');
+                    if (savedDishes) {
+                        this.dishes = JSON.parse(savedDishes);
+                    } else {
+                        // 示例数据
+                        this.dishes = [
+                            { 
+                                id: 1, 
+                                name: '番茄炒蛋',
+                                category: '蔬菜',
+                                image: '',
+                                tags: ['家常', '简单'], 
+                                difficulty: '简单', 
+                                steps: '1. 鸡蛋打散\n2. 番茄切块\n3. 热锅炒蛋\n4. 加番茄翻炒' 
+                            },
+                            { 
+                                id: 2, 
+                                name: '红烧肉',
+                                category: '现炒肉类',
+                                image: '',
+                                tags: ['荤菜', '中等'], 
+                                difficulty: '中等', 
+                                steps: '1. 五花肉切块\n2. 焯水去腥\n3. 炒糖色\n4. 炖煮40分钟' 
+                            }
+                        ];
+                    }
+                    
+                    const savedCart = localStorage.getItem('cart');
+                    if (savedCart) {
+                        this.cart = JSON.parse(savedCart);
+                    }
+                },
+                getCategoryCount(category) {
+                    return this.dishes.filter(dish => dish.category === category).length;
+                },
+                handleImageUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.newDish.image = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                },
+                removeImage() {
+                    this.newDish.image = '';
+                },
+                toggleForm() {
+                    this.showForm = !this.showForm;
+                },
+                addDish() {
+                    const tags = this.newDish.tagsStr
+                        ? this.newDish.tagsStr.split(',').map(t => t.trim()).filter(t => t)
+                        : [];
+                    
+                    const dish = {
+                        id: Date.now(),
+                        name: this.newDish.name,
+                        category: this.newDish.category,
+                        image: this.newDish.image,
+                        tags: tags,
+                        difficulty: this.newDish.difficulty,
+                        steps: this.newDish.steps
+                    };
+                    
+                    this.dishes.push(dish);
+                    this.saveDishes();
+                    
+                    // 重置表单
+                    this.newDish = {
+                        name: '',
+                        category: '',
+                        image: '',
+                        tagsStr: '',
+                        difficulty: '简单',
+                        steps: ''
+                    };
+                    this.showForm = false;
+                    // 切换到新增菜品的分类
+                    this.currentCategory = dish.category;
+                },
+                deleteDish(id) {
+                    if (confirm('确定要删除这道菜吗？')) {
+                        this.dishes = this.dishes.filter(d => d.id !== id);
+                        this.saveDishes();
+                    }
+                },
+                addToCart(dish) {
+                    const existing = this.cart.find(item => item.id === dish.id);
+                    if (existing) {
+                        existing.quantity++;
+                    } else {
+                        this.cart.push({ ...dish, quantity: 1 });
+                    }
+                    this.saveCart();
+                },
+                removeFromCart(id) {
+                    this.cart = this.cart.filter(item => item.id !== id);
+                    this.saveCart();
+                },
+                increaseQty(item) {
+                    item.quantity++;
+                    this.saveCart();
+                },
+                decreaseQty(item) {
+                    if (item.quantity > 1) {
+                        item.quantity--;
+                        this.saveCart();
+                    } else {
+                        this.removeFromCart(item.id);
+                    }
+                },
+                placeOrder() {
+                    if (this.cart.length === 0) {
+                        alert('购物车是空的');
+                        return;
+                    }
+                    
+                    const order = {
+                        id: Date.now(),
+                        items: [...this.cart],
+                        total: this.totalItems,
+                        createdAt: new Date().toLocaleString('zh-CN')
+                    };
+                    
+                    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                    orders.push(order);
+                    localStorage.setItem('orders', JSON.stringify(orders));
+                    
+                    alert(`订单已创建！\n共 ${order.total} 道菜\n时间：${order.createdAt}`);
+                    
+                    this.cart = [];
+                    this.saveCart();
+                    this.view = 'dishes';
+                },
+                saveDishes() {
+                    localStorage.setItem('dishes', JSON.stringify(this.dishes));
+                },
+                saveCart() {
+                    localStorage.setItem('cart', JSON.stringify(this.cart));
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
