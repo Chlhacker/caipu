@@ -178,49 +178,6 @@
             overflow-y: auto;
         }
 
-        /* 移动端适配 */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 80px; /* 缩小侧边栏宽度 */
-                padding: 0.5rem 0;
-            }
-
-            .sidebar-title {
-                font-size: 0.7rem;
-                padding: 0 0.5rem;
-                margin-bottom: 0.5rem;
-            }
-
-            .category-item {
-                padding: 0.5rem 0.25rem;
-                font-size: 0.7rem;
-                text-align: center;
-                word-break: break-all;
-            }
-
-            .category-count {
-                font-size: 0.6rem;
-                padding: 0.1rem 0.3rem;
-                float: none;
-                display: block;
-                margin: 0.2rem auto 0;
-                width: fit-content;
-            }
-
-            .content {
-                padding: 0.75rem;
-            }
-
-            /* 底部购物车栏适配 */
-            .float-cart-bar {
-                left: 80px; /* 与移动端侧边栏宽度对齐 */
-            }
-
-            .cart-drawer {
-                left: 80px; /* 与移动端侧边栏宽度对齐 */
-            }
-        }
-
 
 
         /* 添加按钮 */
@@ -2942,6 +2899,24 @@ git push</pre>
                 }
             }
         }).mount('#app');
+
+        // 自适应等比例缩放（保持布局一致）
+        function autoScale() {
+            const designWidth = 1200; // 设计基准宽度
+            const screenWidth = window.innerWidth;
+            
+            // 计算缩放比例（最大不超过1.0，避免放大）
+            let scale = Math.min(screenWidth / designWidth, 1.0);
+            
+            // 使用 zoom 属性进行等比例缩放
+            document.body.style.zoom = scale;
+            
+            console.log(`📱 屏幕宽度: ${screenWidth}px, 缩放比例: ${(scale * 100).toFixed(1)}%`);
+        }
+
+        // 页面加载和窗口大小变化时重新计算
+        window.addEventListener('load', autoScale);
+        window.addEventListener('resize', autoScale);
     </script>
 </body>
 </html>
