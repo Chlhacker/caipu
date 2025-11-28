@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1200, initial-scale=0.5, minimum-scale=0.3, maximum-scale=2.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <meta name="theme-color" content="#f97316">
     <title>🍳 崔宝的御膳房</title>
     <link rel="manifest" href="manifest.json">
@@ -17,6 +17,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: #fff7ed;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden; /* 防止横向滚动条 */
         }
 
         .app {
@@ -26,6 +27,7 @@
             background-color: #ffffff;
             display: flex;
             flex-direction: column;
+            transition: transform 0.3s ease; /* 平滑过渡 */
         }
 
         /* 头部导航 */
@@ -2863,6 +2865,28 @@ git push</pre>
                 }
             }
         }).mount('#app');
+
+        // 自适应等比例缩放
+        function autoScale() {
+            const designWidth = 1200; // 设计基准宽度
+            const app = document.querySelector('.app');
+            const screenWidth = window.innerWidth;
+            
+            // 计算缩放比例（最大不超过1.0，避免放大）
+            let scale = Math.min(screenWidth / designWidth, 1.0);
+            
+            // 应用缩放
+            app.style.transform = `scale(${scale})`;
+            app.style.transformOrigin = 'top center';
+            
+            // 调整body高度，避免底部留白
+            const scaledHeight = app.offsetHeight * scale;
+            document.body.style.height = `${scaledHeight}px`;
+        }
+
+        // 页面加载和窗口大小变化时重新计算
+        window.addEventListener('load', autoScale);
+        window.addEventListener('resize', autoScale);
     </script>
 </body>
 </html>
