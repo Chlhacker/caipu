@@ -21,7 +21,11 @@ jobs:
         run: tcb login --apiKeyId ${{ secrets.TCB_SECRET_ID }} --apiKey ${{ secrets.TCB_SECRET_KEY }}
       
       - name: 🚀 部署到静态托管
-        run: tcb hosting deploy . / -e ${{ secrets.TCB_ENV_ID }}
+        run: |
+          # 只部署需要的静态文件，排除 .git 和 .github
+          tcb hosting deploy index.html /index.html -e ${{ secrets.TCB_ENV_ID }}
+          tcb hosting deploy manifest.json /manifest.json -e ${{ secrets.TCB_ENV_ID }}
+          tcb hosting deploy sw.js /sw.js -e ${{ secrets.TCB_ENV_ID }}
       
       - name: ✅ 部署成功通知
         if: success()
