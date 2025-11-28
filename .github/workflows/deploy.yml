@@ -1,0 +1,40 @@
+name: 部署到腾讯云 CloudBase
+
+on:
+  push:
+    branches:
+      - main  # 主分支推送时自动部署
+  workflow_dispatch:  # 允许手动触发部署
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📦 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 🔧 安装 CloudBase CLI
+        run: npm install -g @cloudbase/cli
+      
+      - name: 🔐 登录 CloudBase
+        run: tcb login --apiKeyId ${{ secrets.TCB_SECRET_ID }} --apiKey ${{ secrets.TCB_SECRET_KEY }}
+      
+      - name: 🚀 部署到静态托管
+        run: tcb hosting deploy . / -e ${{ secrets.TCB_ENV_ID }}
+      
+      - name: ✅ 部署成功通知
+        if: success()
+        run: |
+          echo "🎉 部署成功！"
+          echo "📱 访问您的 CloudBase 静态托管域名查看效果"
+          echo "⏰ 部署时间: $(date '+%Y-%m-%d %H:%M:%S')"
+      
+      - name: ❌ 部署失败通知
+        if: failure()
+        run: |
+          echo "💔 部署失败，请检查配置和日志"
+          echo "📋 常见问题："
+          echo "  1. 检查 GitHub Secrets 是否配置正确"
+          echo "  2. 检查 CloudBase 环境 ID 是否正确"
+          echo "  3. 检查 API 密钥是否有效"

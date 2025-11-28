@@ -71,3 +71,76 @@ caipu/
 ## 📱 PWA
 
 应用支持添加到主屏幕，可像原生 App 一样使用。
+
+## 🚀 部署到腾讯云 CloudBase
+
+项目已配置 GitHub Actions 自动部署工作流。
+
+### 配置步骤
+
+#### 1. 开通 CloudBase
+
+1. 访问 [CloudBase 控制台](https://console.cloud.tencent.com/tcb)
+2. 创建新环境（选择“按量付费” - 有免费额度）
+3. 记录环境 ID（如 `caipu-xxx`）
+4. 开通“静态网站托管”服务
+
+#### 2. 获取 API 密钥
+
+1. 访问 [腾讯云 API 密钥管理](https://console.cloud.tencent.com/cam/capi)
+2. 创建密钥，获取 `SecretId` 和 `SecretKey`
+3. **妥善保管，不要泄露！**
+
+#### 3. 配置 GitHub Secrets
+
+在 GitHub 仓库中，依次点击 `Settings` → `Secrets and variables` → `Actions` → `New repository secret`。
+
+添加以下 3 个 Secrets：
+
+| Secret 名称 | 值 | 说明 |
+|------------|-----|------|
+| `TCB_SECRET_ID` | 你的 SecretId | 腾讯云 API 密钥 ID |
+| `TCB_SECRET_KEY` | 你的 SecretKey | 腾讯云 API 密钥 Key |
+| `TCB_ENV_ID` | 你的环境 ID | CloudBase 环境 ID |
+
+#### 4. 自动部署
+
+配置完成后，每次将代码 push 到 `main` 分支，GitHub Actions 会自动：
+
+1. ✅ 检出代码
+2. ✅ 安装 CloudBase CLI
+3. ✅ 登录 CloudBase
+4. ✅ 部署到静态托管
+5. ✅ 显示部署结果
+
+#### 5. 查看部署状态
+
+- 在 GitHub 仓库点击 `Actions` 标签页查看部署日志
+- 在 CloudBase 控制台查看托管文件
+- 访问 CloudBase 提供的默认域名或自定义域名
+
+### 手动触发部署
+
+在 GitHub 仓库点击 `Actions` → 选择 `部署到腾讯云 CloudBase` → `Run workflow` → `Run workflow`
+
+### 本地部署（可选）
+
+如果不想使用 GitHub Actions，也可以本地部署：
+
+```bash
+# 1. 安装 CloudBase CLI
+npm install -g @cloudbase/cli
+
+# 2. 登录
+tcb login --apiKeyId YOUR_SECRET_ID --apiKey YOUR_SECRET_KEY
+
+# 3. 部署
+tcb hosting deploy . / -e YOUR_ENV_ID
+```
+
+### 注意事项
+
+- ✅ CloudBase 静态托管有免费额度，小项目完全够用
+- ✅ 自带 CDN 加速，访问更快
+- ✅ 自动配置 HTTPS
+- ✅ 可绑定自定义域名

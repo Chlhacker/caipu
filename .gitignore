@@ -21,3 +21,7 @@ package-lock.json
 # 备份文件
 *.bak
 *.backup
+
+# CloudBase
+.cloudbase/
+.tcbrc
