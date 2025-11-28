@@ -22,7 +22,7 @@
 
         .app {
             width: 100%; /* 铺满整个屏幕宽度 */
-            height: 100vh; /* 固定高度为视口高度，避免整体滚动 */
+            min-height: 100vh; /* 改为 min-height，适应 zoom 缩放 */
             background-color: #ffffff;
             display: flex;
             flex-direction: column;
@@ -2910,6 +2910,17 @@ git push</pre>
             
             // 使用 zoom 属性进行等比例缩放
             document.body.style.zoom = scale;
+            
+            // 修复 zoom 后的高度问题
+            const app = document.querySelector('.app');
+            if (app && scale < 1.0) {
+                // 计算缩放后需要的实际高度
+                const viewportHeight = window.innerHeight;
+                const scaledHeight = viewportHeight / scale;
+                app.style.minHeight = scaledHeight + 'px';
+            } else if (app) {
+                app.style.minHeight = '100vh';
+            }
             
             console.log(`📱 屏幕宽度: ${screenWidth}px, 缩放比例: ${(scale * 100).toFixed(1)}%`);
         }
