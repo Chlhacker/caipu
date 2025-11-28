@@ -330,6 +330,72 @@
             background: #ea580c;
         }
 
+        /* 分类管理样式 */
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .category-item-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: white;
+            border: 2px solid #ffedd5;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .category-item-card:hover {
+            border-color: #fed7aa;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.1);
+        }
+
+        .category-item-name {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1rem;
+            color: #1f2937;
+            font-weight: 500;
+        }
+
+        .category-item-icon {
+            font-size: 1.5rem;
+        }
+
+        .category-item-count {
+            font-size: 0.875rem;
+            color: #9a3412;
+            background: #ffedd5;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+        }
+
+        .category-delete-btn {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 2px solid #fecaca;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .category-delete-btn:hover:not(:disabled) {
+            background: #fecaca;
+            border-color: #fca5a5;
+        }
+
+        .category-delete-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         /* 菜品卡片 */
         .dish-card {
             background: white;
@@ -2018,6 +2084,13 @@
                         >
                             📋 管理菜品
                         </button>
+                        <button 
+                            class="admin-tab" 
+                            :class="{active: adminTab === 'category'}"
+                            @click="adminTab = 'category'"
+                        >
+                            📂 管理分类
+                        </button>
                     </div>
 
                     <!-- 添加菜品 -->
@@ -2141,6 +2214,59 @@
                                         <button class="admin-cancel-btn" @click="cancelEdit">取消</button>
                                         <button class="admin-save-btn" @click="saveEdit">💾 保存修改</button>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 管理分类 -->
+                    <div class="admin-tab-content" :class="{active: adminTab === 'category'}">
+                        <div class="form-card">
+                            <div class="category-section">
+                                <h3 style="margin-bottom: 1rem; color: #f97316;">➕ 添加新分类</h3>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input 
+                                        v-model="newCategoryName" 
+                                        type="text" 
+                                        class="form-input" 
+                                        placeholder="输入分类名称，例如：粤菜"
+                                        @keyup.enter="addCategory"
+                                        style="flex: 1;"
+                                    >
+                                    <button class="submit-btn" @click="addCategory" style="width: auto; padding: 0 2rem;">
+                                        ➕ 添加
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="category-section" style="margin-top: 2rem;">
+                                <h3 style="margin-bottom: 1rem; color: #f97316;">📂 已有分类</h3>
+                                <div v-if="categories.length === 0" class="empty" style="padding: 2rem;">
+                                    <p>还没有任何分类</p>
+                                </div>
+                                <div v-else class="category-list">
+                                    <div v-for="(cat, index) in categories" :key="cat" class="category-item-card">
+                                        <div class="category-item-name">
+                                            <span class="category-item-icon">📂</span>
+                                            <span>{{ cat }}</span>
+                                            <span class="category-item-count">({{ getCategoryCount(cat) }} 道菜)</span>
+                                        </div>
+                                        <button 
+                                            class="category-delete-btn" 
+                                            @click="deleteCategory(cat)"
+                                            :disabled="getCategoryCount(cat) > 0"
+                                        >
+                                            🗑️ 删除
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 1rem; padding: 1rem; background: #fff7ed; border-radius: 0.5rem; border-left: 4px solid #f97316;">
+                                    <strong style="color: #ea580c;">⚠️ 提示：</strong>
+                                    <ul style="margin: 0.5rem 0 0 1.5rem; color: #9a3412; line-height: 1.8;">
+                                        <li>只有空分类（没有菜品）才能删除</li>
+                                        <li>删除分类前，请先删除或移动该分类下的所有菜品</li>
+                                        <li>分类修改后会立即保存到云端</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -2333,6 +2459,7 @@
                         name: '',
                         note: ''
                     },
+                    newCategoryName: '',
                     editingDishId: null,
                     editingDish: {
                         name: '',
@@ -2374,6 +2501,8 @@
             mounted() {
                 // 初始化 LeanCloud
                 this.initLeanCloud();
+                // 加载分类
+                this.loadCategoriesFromCloud();
                 // 加载数据
                 this.loadData();
                 // 注册 Service Worker（PWA 支持）
@@ -3007,6 +3136,102 @@
                     } catch (error) {
                         console.error('❌ 删除心愿失败:', error);
                         alert('删除失败，请检查网络连接');
+                    }
+                },
+
+                // 分类管理
+                async addCategory() {
+                    const categoryName = this.newCategoryName.trim();
+                    if (!categoryName) {
+                        alert('请输入分类名称');
+                        return;
+                    }
+                    
+                    if (this.categories.includes(categoryName)) {
+                        alert('该分类已存在！');
+                        return;
+                    }
+                    
+                    try {
+                        // 添加到本地
+                        this.categories.push(categoryName);
+                        
+                        // 保存到 LeanCloud
+                        await this.saveCategoriesToCloud();
+                        
+                        this.newCategoryName = '';
+                        alert('✅ 分类添加成功！');
+                    } catch (error) {
+                        console.error('❌ 添加分类失败:', error);
+                        // 回滚
+                        this.categories.pop();
+                        alert('添加失败，请检查网络连接');
+                    }
+                },
+                
+                async deleteCategory(categoryName) {
+                    const count = this.getCategoryCount(categoryName);
+                    if (count > 0) {
+                        alert(`无法删除！\n\n该分类下还有 ${count} 道菜品。\n请先删除或移动这些菜品到其他分类。`);
+                        return;
+                    }
+                    
+                    if (!confirm(`确定要删除分类“${categoryName}”吗？`)) {
+                        return;
+                    }
+                    
+                    try {
+                        // 从本地删除
+                        const index = this.categories.indexOf(categoryName);
+                        if (index > -1) {
+                            this.categories.splice(index, 1);
+                        }
+                        
+                        // 保存到 LeanCloud
+                        await this.saveCategoriesToCloud();
+                        
+                        alert('✅ 分类删除成功！');
+                    } catch (error) {
+                        console.error('❌ 删除分类失败:', error);
+                        // 回滚
+                        this.categories.splice(index, 0, categoryName);
+                        alert('删除失败，请检查网络连接');
+                    }
+                },
+                
+                async saveCategoriesToCloud() {
+                    // 将分类保存到 LeanCloud 的配置表
+                    const Config = AV.Object.extend('Config');
+                    const query = new AV.Query(Config);
+                    query.equalTo('key', 'categories');
+                    
+                    let configObj = await query.first();
+                    if (!configObj) {
+                        configObj = new Config();
+                        configObj.set('key', 'categories');
+                    }
+                    
+                    configObj.set('value', this.categories);
+                    await configObj.save();
+                    console.log('✅ 分类已保存到云端');
+                },
+                
+                async loadCategoriesFromCloud() {
+                    try {
+                        const Config = AV.Object.extend('Config');
+                        const query = new AV.Query(Config);
+                        query.equalTo('key', 'categories');
+                        const configObj = await query.first();
+                        
+                        if (configObj) {
+                            const cloudCategories = configObj.get('value');
+                            if (cloudCategories && Array.isArray(cloudCategories)) {
+                                this.categories = cloudCategories;
+                                console.log('✅ 分类从云端加载成功');
+                            }
+                        }
+                    } catch (error) {
+                        console.log('⚠️ 加载分类失败，使用默认分类:', error);
                     }
                 },
 
