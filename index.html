@@ -3200,20 +3200,32 @@
                 },
                 
                 async saveCategoriesToCloud() {
-                    // 将分类保存到 LeanCloud 的配置表
-                    const Config = AV.Object.extend('Config');
-                    const query = new AV.Query(Config);
-                    query.equalTo('key', 'categories');
-                    
-                    let configObj = await query.first();
-                    if (!configObj) {
-                        configObj = new Config();
-                        configObj.set('key', 'categories');
+                    try {
+                        // 将分类保存到 LeanCloud 的配置表
+                        const Config = AV.Object.extend('Config');
+                        const query = new AV.Query(Config);
+                        query.equalTo('key', 'categories');
+                        
+                        let configObj = await query.first();
+                        if (!configObj) {
+                            configObj = new Config();
+                            configObj.set('key', 'categories');
+                        }
+                        
+                        configObj.set('value', this.categories);
+                        
+                        // 设置 ACL（访问控制），允许所有人读写
+                        const acl = new AV.ACL();
+                        acl.setPublicReadAccess(true);
+                        acl.setPublicWriteAccess(true);
+                        configObj.setACL(acl);
+                        
+                        await configObj.save();
+                        console.log('✅ 分类已保存到云端');
+                    } catch (error) {
+                        console.error('❌ 保存分类到云端失败:', error);
+                        throw error;
                     }
-                    
-                    configObj.set('value', this.categories);
-                    await configObj.save();
-                    console.log('✅ 分类已保存到云端');
                 },
                 
                 async loadCategoriesFromCloud() {
