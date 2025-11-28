@@ -1108,6 +1108,15 @@
             transition: all 0.2s;
         }
 
+        .admin-edit-btn {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .admin-edit-btn:hover {
+            background: #bfdbfe;
+        }
+
         .admin-delete-btn {
             background: #fee2e2;
             color: #dc2626;
@@ -1115,6 +1124,58 @@
 
         .admin-delete-btn:hover {
             background: #fecaca;
+        }
+
+        .admin-edit-form {
+            background: #eff6ff;
+            border: 2px solid #bfdbfe;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .admin-edit-form-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 1rem;
+        }
+
+        .admin-form-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        .admin-save-btn {
+            background: #10b981;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .admin-save-btn:hover {
+            background: #059669;
+        }
+
+        .admin-cancel-btn {
+            background: #e5e7eb;
+            color: #4b5563;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .admin-cancel-btn:hover {
+            background: #d1d5db;
         }
 
         @keyframes slideUp {
@@ -1862,9 +1923,60 @@
                                     </div>
                                 </div>
                                 <div class="admin-dish-actions">
+                                    <button class="admin-action-btn admin-edit-btn" @click="startEditDish(dish)">
+                                        ✏️ 编辑
+                                    </button>
                                     <button class="admin-action-btn admin-delete-btn" @click="deleteDish(dish.id)">
                                         🗑️ 删除
                                     </button>
+                                </div>
+                                
+                                <!-- 编辑表单 -->
+                                <div v-if="editingDishId === dish.id" class="admin-edit-form">
+                                    <div class="admin-edit-form-title">✏️ 编辑菜品信息</div>
+                                    <div class="form-group">
+                                        <label class="form-label">菜品图片</label>
+                                        <div class="image-upload">
+                                            <input type="file" accept="image/*" @change="handleEditImageUpload">
+                                            <div v-if="!editingDish.image" class="image-upload-placeholder">
+                                                <div class="image-upload-placeholder-icon">📷</div>
+                                                <div>点击上传菜品图片</div>
+                                            </div>
+                                            <img v-else :src="editingDish.image" class="image-preview">
+                                            <button v-if="editingDish.image" type="button" class="image-remove" @click="removeEditImage">✕</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">菜品分类 *</label>
+                                        <select v-model="editingDish.category" class="form-select" required>
+                                            <option value="">请选择分类</option>
+                                            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">菜名 *</label>
+                                        <input v-model="editingDish.name" type="text" class="form-input" placeholder="例如：宫保鸡丁" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">标签（逗号分隔）</label>
+                                        <input v-model="editingDish.tagsStr" type="text" class="form-input" placeholder="例如：川菜,辣,荤菜">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">难度</label>
+                                        <select v-model="editingDish.difficulty" class="form-select">
+                                            <option>简单</option>
+                                            <option>中等</option>
+                                            <option>困难</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">制作步骤</label>
+                                        <textarea v-model="editingDish.steps" class="form-textarea" placeholder="每行一个步骤&#10;1. 准备食材&#10;2. 处理食材&#10;3. 烹饪..."></textarea>
+                                    </div>
+                                    <div class="admin-form-actions">
+                                        <button class="admin-cancel-btn" @click="cancelEdit">取消</button>
+                                        <button class="admin-save-btn" @click="saveEdit">💾 保存修改</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2013,6 +2125,15 @@
                     newWish: {
                         name: '',
                         note: ''
+                    },
+                    editingDishId: null,
+                    editingDish: {
+                        name: '',
+                        category: '',
+                        image: '',
+                        tagsStr: '',
+                        difficulty: '简单',
+                        steps: ''
                     },
                     newDish: {
                         name: '',
@@ -2209,6 +2330,65 @@
                         this.dishes = this.dishes.filter(d => d.id !== id);
                         this.saveDishes();
                     }
+                },
+                startEditDish(dish) {
+                    this.editingDishId = dish.id;
+                    this.editingDish = {
+                        name: dish.name,
+                        category: dish.category,
+                        image: dish.image || '',
+                        tagsStr: dish.tags ? dish.tags.join(', ') : '',
+                        difficulty: dish.difficulty,
+                        steps: dish.steps || ''
+                    };
+                },
+                cancelEdit() {
+                    this.editingDishId = null;
+                    this.editingDish = {
+                        name: '',
+                        category: '',
+                        image: '',
+                        tagsStr: '',
+                        difficulty: '简单',
+                        steps: ''
+                    };
+                },
+                saveEdit() {
+                    if (!this.editingDish.name || !this.editingDish.category) {
+                        alert('请填写菜名和分类');
+                        return;
+                    }
+                    
+                    const dish = this.dishes.find(d => d.id === this.editingDishId);
+                    if (dish) {
+                        const tags = this.editingDish.tagsStr
+                            ? this.editingDish.tagsStr.split(',').map(t => t.trim()).filter(t => t)
+                            : [];
+                        
+                        dish.name = this.editingDish.name;
+                        dish.category = this.editingDish.category;
+                        dish.image = this.editingDish.image;
+                        dish.tags = tags;
+                        dish.difficulty = this.editingDish.difficulty;
+                        dish.steps = this.editingDish.steps;
+                        
+                        this.saveDishes();
+                        this.cancelEdit();
+                        alert('菜品修改成功！');
+                    }
+                },
+                handleEditImageUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.editingDish.image = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                },
+                removeEditImage() {
+                    this.editingDish.image = '';
                 },
                 addToCart(dish) {
                     const existing = this.cart.find(item => item.id === dish.id);
