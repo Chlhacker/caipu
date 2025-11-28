@@ -21,13 +21,11 @@
         }
 
         .app {
-            max-width: 1200px;
-            margin: 0 auto;
-            min-height: 100vh;
+            width: 100%; /* 铺满整个屏幕宽度 */
+            height: 100vh; /* 固定高度为视口高度，避免整体滚动 */
             background-color: #ffffff;
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s ease; /* 平滑过渡 */
         }
 
         /* 头部导航 */
@@ -680,10 +678,8 @@
         .float-cart-bar {
             position: fixed;
             bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            max-width: 1200px;
-            width: 100%;
+            left: 200px; /* 与左侧边栏对齐 */
+            right: 0; /* 占满右侧内容区域 */
             height: 60px;
             background: white;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
@@ -789,10 +785,9 @@
         .cart-drawer {
             position: fixed;
             bottom: 0;
-            left: 50%;
-            transform: translate(-50%, 100%);
-            max-width: 1200px;
-            width: 100%;
+            left: 200px; /* 与底部购物车栏对齐 */
+            right: 0;
+            transform: translateY(100%);
             max-height: 70vh;
             background: white;
             border-radius: 1rem 1rem 0 0;
@@ -803,7 +798,7 @@
         }
 
         .cart-drawer.show {
-            transform: translate(-50%, 0);
+            transform: translateY(0);
         }
 
         .cart-drawer-header {
@@ -2370,7 +2365,7 @@ git push</pre>
                     showDataModal: false,
                     adminTab: 'add',
                     expandedDishes: {},
-                    categories: ['现炒肉类', '蔬菜', '炖汤', '烧烤', '饮料', '小吃', '内蒙风味', '粤式早点'],
+                    categories: ['现炒肉类', '蔬菜', '炖汤', '烧烤', '饮料', '小吃', '内蒙风味', '粤式早点','养生茶'],
                     currentCategory: '现炒肉类',
                     dishes: [],
                     cart: [],
@@ -2396,7 +2391,8 @@ git push</pre>
                         tagsStr: '',
                         difficulty: '简单',
                         steps: ''
-                    }
+                    },
+                    saveTimeout: null // 用于防抖
                 }
             },
             computed: {
@@ -2739,12 +2735,14 @@ git push</pre>
                 },
                 saveDishes() {
                     localStorage.setItem('dishes', JSON.stringify(this.dishes));
+                    this.autoSaveToServer(); // 自动保存到服务器
                 },
                 saveCart() {
                     localStorage.setItem('cart', JSON.stringify(this.cart));
                 },
                 saveOrders() {
                     localStorage.setItem('orders', JSON.stringify(this.orders));
+                    this.autoSaveToServer(); // 自动保存到服务器
                 },
                 addWish() {
                     if (!this.newWish.name.trim()) {
@@ -2780,6 +2778,42 @@ git push</pre>
                 },
                 saveWishes() {
                     localStorage.setItem('wishes', JSON.stringify(this.wishes));
+                    this.autoSaveToServer(); // 自动保存到服务器
+                },
+                async autoSaveToServer() {
+                    // 防抖：避免频繁请求
+                    if (this.saveTimeout) {
+                        clearTimeout(this.saveTimeout);
+                    }
+                    
+                    this.saveTimeout = setTimeout(async () => {
+                        try {
+                            const data = {
+                                dishes: this.dishes,
+                                orders: this.orders,
+                                wishes: this.wishes
+                            };
+                            
+                            const response = await fetch('http://localhost:3000/api/save-data', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(data)
+                            });
+                            
+                            const result = await response.json();
+                            
+                            if (result.success) {
+                                console.log('✅ 数据已自动保存到 data.json');
+                            } else {
+                                console.error('⚠️ 保存失败:', result.message);
+                            }
+                        } catch (error) {
+                            // 静默失败，不影响用户体验
+                            console.log('⚠️ 无法连接到服务器，数据仅保存在本地');
+                        }
+                    }, 1000); // 1秒后保存，避免频繁请求
                 },
                 exportData() {
                     const data = {
@@ -2865,28 +2899,6 @@ git push</pre>
                 }
             }
         }).mount('#app');
-
-        // 自适应等比例缩放
-        function autoScale() {
-            const designWidth = 1200; // 设计基准宽度
-            const app = document.querySelector('.app');
-            const screenWidth = window.innerWidth;
-            
-            // 计算缩放比例（最大不超过1.0，避免放大）
-            let scale = Math.min(screenWidth / designWidth, 1.0);
-            
-            // 应用缩放
-            app.style.transform = `scale(${scale})`;
-            app.style.transformOrigin = 'top center';
-            
-            // 调整body高度，避免底部留白
-            const scaledHeight = app.offsetHeight * scale;
-            document.body.style.height = `${scaledHeight}px`;
-        }
-
-        // 页面加载和窗口大小变化时重新计算
-        window.addEventListener('load', autoScale);
-        window.addEventListener('resize', autoScale);
     </script>
 </body>
 </html>
