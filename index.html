@@ -2392,7 +2392,8 @@ git push</pre>
                         difficulty: '简单',
                         steps: ''
                     },
-                    saveTimeout: null // 用于防抖
+                    saveTimeout: null, // 用于防抖
+                    refreshInterval: null // 用于自动刷新
                 }
             },
             computed: {
@@ -2418,6 +2419,8 @@ git push</pre>
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('sw.js').catch(() => {});
                 }
+                // 启动自动刷新（每30秒从服务器重新加载数据）
+                this.startAutoRefresh();
             },
             methods: {
                 getDifficultyClass(difficulty) {
@@ -2699,7 +2702,7 @@ git push</pre>
                 },
                 placeOrder() {
                     if (this.cart.length === 0) {
-                        alert('购物车是空的');
+                        alert('🛒 购物车是空的，快去添加菜品吧！');
                         return;
                     }
                     
@@ -2714,11 +2717,18 @@ git push</pre>
                     this.orders.push(order);
                     this.saveOrders();
                     
-                    alert(`订单已创建！\n共 ${order.total} 道菜\n时间：${order.createdAt}`);
-                    
+                    // 清空购物车
                     this.cart = [];
                     this.saveCart();
                     this.closeCartDrawer();
+                    
+                    // 显示成功提示
+                    alert(`✅ 下单成功！
+
+🍲 共 ${order.total} 道菜
+🕒 时间：${order.createdAt}
+
+购物车已自动清空`);
                 },
                 completeOrder(orderId) {
                     const order = this.orders.find(o => o.id === orderId);
@@ -2814,6 +2824,45 @@ git push</pre>
                             console.log('⚠️ 无法连接到服务器，数据仅保存在本地');
                         }
                     }, 1000); // 1秒后保存，避免频繁请求
+                },
+                startAutoRefresh() {
+                    // 每30秒自动从服务器重新加载数据
+                    this.refreshInterval = setInterval(async () => {
+                        try {
+                            const response = await fetch('data.json?t=' + Date.now()); // 防止缓存
+                            if (response.ok) {
+                                const data = await response.json();
+                                
+                                // 对比订单数量，如果有新订单则更新
+                                const oldOrderCount = this.orders.length;
+                                const newOrderCount = data.orders?.length || 0;
+                                
+                                if (newOrderCount > oldOrderCount) {
+                                    // 有新订单
+                                    this.orders = data.orders;
+                                    this.saveOrders();
+                                    console.log(`🔔 检测到 ${newOrderCount - oldOrderCount} 个新订单`);
+                                } else if (newOrderCount < oldOrderCount) {
+                                    // 订单被删除
+                                    this.orders = data.orders;
+                                    this.saveOrders();
+                                }
+                                
+                                // 更新菜品和心愿列表
+                                if (data.dishes) {
+                                    this.dishes = data.dishes;
+                                    localStorage.setItem('dishes', JSON.stringify(this.dishes));
+                                }
+                                if (data.wishes) {
+                                    this.wishes = data.wishes;
+                                    localStorage.setItem('wishes', JSON.stringify(this.wishes));
+                                }
+                            }
+                        } catch (error) {
+                            // 静默失败
+                            console.log('⚠️ 自动刷新失败');
+                        }
+                    }, 30000); // 30秒
                 },
                 exportData() {
                     const data = {
