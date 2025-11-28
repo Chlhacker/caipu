@@ -2641,29 +2641,14 @@ git push</pre>
                     return '';
                 },
                 loadData() {
-                    // 优先从 localStorage 加载（用户已修改的数据）
-                    const savedDishes = localStorage.getItem('dishes');
-                    const savedOrders = localStorage.getItem('orders');
-                    const savedWishes = localStorage.getItem('wishes');
-                    const savedCart = localStorage.getItem('cart');
+                    // 始终从 data.json 加载最新数据（实现多设备同步）
+                    // localStorage 仅作为临时缓存，防止页面刷新时数据丢失
+                    this.loadFromJsonFile();
                     
-                    // 如果 localStorage 没有数据，尝试从 data.json 加载
-                    if (!savedDishes && !savedOrders && !savedWishes) {
-                        this.loadFromJsonFile();
-                    } else {
-                        // 从 localStorage 加载
-                        if (savedDishes) {
-                            this.dishes = JSON.parse(savedDishes);
-                        }
-                        if (savedOrders) {
-                            this.orders = JSON.parse(savedOrders);
-                        }
-                        if (savedWishes) {
-                            this.wishes = JSON.parse(savedWishes);
-                        }
-                        if (savedCart) {
-                            this.cart = JSON.parse(savedCart);
-                        }
+                    // 同时恢复购物车（购物车是临时数据，不需要同步）
+                    const savedCart = localStorage.getItem('cart');
+                    if (savedCart) {
+                        this.cart = JSON.parse(savedCart);
                     }
                 },
                 async loadFromJsonFile() {
