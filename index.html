@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#f97316">
-    <title>🍳 菜谱助手</title>
+    <title>🍳 崔宝的御膳房</title>
     <link rel="manifest" href="manifest.json">
     <style>
         * {
@@ -48,6 +48,33 @@
         .header h1 {
             font-size: 1.25rem;
             font-weight: 600;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .admin-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .admin-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        .admin-btn.active {
+            background: white;
+            color: #f97316;
+            border-color: white;
         }
 
         .nav {
@@ -328,32 +355,52 @@
         /* 菜品卡片 */
         .dish-card {
             background: white;
-            padding: 1.25rem;
+            padding: 1rem;
             border-radius: 1rem;
             box-shadow: 0 2px 8px rgba(249, 115, 22, 0.1);
             border: 1px solid #ffedd5;
             margin-bottom: 1rem;
             transition: all 0.2s;
+            display: flex;
+            gap: 1rem;
+            position: relative;
+            min-height: 140px;
         }
 
         .dish-card:hover {
             box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
             border-color: #fed7aa;
+            transform: translateY(-2px);
         }
 
         .dish-image {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
             border-radius: 0.75rem;
-            margin-bottom: 1rem;
+            background-color: #fff7ed;
+            flex-shrink: 0;
         }
 
-        .dish-header {
+        .dish-image-placeholder {
+            width: 120px;
+            height: 120px;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 0.75rem;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #fed7aa;
+            flex-shrink: 0;
+        }
+
+        .dish-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            padding-right: 3rem;
         }
 
         .dish-name {
@@ -367,6 +414,7 @@
             display: flex;
             gap: 0.5rem;
             flex-wrap: wrap;
+            margin-bottom: 0.5rem;
         }
 
         .tag {
@@ -388,37 +436,109 @@
             color: #92400e;
         }
 
-        .delete-btn {
-            background: none;
-            border: none;
-            color: #ef4444;
-            font-size: 0.875rem;
-            cursor: pointer;
-            padding: 0.25rem 0.5rem;
-        }
-
         .dish-steps {
             color: #6b7280;
             font-size: 0.875rem;
             line-height: 1.6;
-            margin-bottom: 1rem;
+            margin-top: auto;
             white-space: pre-line;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            transition: all 0.3s;
         }
 
-        .cart-btn {
-            width: 100%;
-            background: #f97316;
+        .dish-steps.expanded {
+            -webkit-line-clamp: unset;
+            display: block;
+        }
+
+        .dish-expand-hint {
+            color: #f97316;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .dish-expand-hint:hover {
+            text-decoration: underline;
+        }
+
+        /* 数量控制 */
+        .dish-quantity-control {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+        }
+
+        .dish-add-btn {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
             color: white;
             border: none;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.95rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            font-weight: 300;
             cursor: pointer;
-            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
         }
 
-        .cart-btn:active {
-            background: #ea580c;
+        .dish-add-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.5);
+        }
+
+        .dish-add-btn:active {
+            transform: scale(0.95);
+        }
+
+        .dish-quantity-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: white;
+            border: 2px solid #f97316;
+            border-radius: 2rem;
+            padding: 0.25rem;
+        }
+
+        .dish-qty-btn {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            border: none;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .dish-qty-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .dish-qty-btn:active {
+            transform: scale(0.9);
+        }
+
+        .dish-quantity-num {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f97316;
+            min-width: 1.5rem;
+            text-align: center;
         }
 
         /* 空状态 */
@@ -445,7 +565,8 @@
             background: white;
             padding: 1.25rem;
             border-radius: 1rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.1);
+            border: 1px solid #ffedd5;
             margin-bottom: 1rem;
         }
 
@@ -561,22 +682,938 @@
         .hidden {
             display: none;
         }
+
+        /* 底部浮动购物车栏 */
+        .float-cart-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 1200px;
+            width: 100%;
+            height: 60px;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            z-index: 200;
+            border-top: 2px solid #fed7aa;
+        }
+
+        .cart-icon-btn {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .cart-icon-btn:active {
+            transform: scale(0.95);
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 1rem;
+            min-width: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .cart-info {
+            flex: 1;
+            margin: 0 1rem;
+            color: #1f2937;
+        }
+
+        .cart-total-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .cart-total-amount {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f97316;
+        }
+
+        .checkout-btn {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+            transition: all 0.2s;
+        }
+
+        .checkout-btn:active {
+            transform: scale(0.95);
+        }
+
+        .checkout-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* 购物车抽屉 */
+        .cart-drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 300;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .cart-drawer-overlay.show {
+            display: block;
+        }
+
+        .cart-drawer {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translate(-50%, 100%);
+            max-width: 1200px;
+            width: 100%;
+            max-height: 70vh;
+            background: white;
+            border-radius: 1rem 1rem 0 0;
+            padding: 1.5rem;
+            z-index: 301;
+            transition: transform 0.3s ease-out;
+            overflow-y: auto;
+        }
+
+        .cart-drawer.show {
+            transform: translate(-50%, 0);
+        }
+
+        .cart-drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #fed7aa;
+        }
+
+        .cart-drawer-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .cart-drawer-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .cart-drawer-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .cart-drawer-item-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-right: 1rem;
+            background: #fff7ed;
+        }
+
+        .cart-drawer-item-placeholder {
+            width: 60px;
+            height: 60px;
+            border-radius: 0.5rem;
+            margin-right: 1rem;
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #fed7aa;
+        }
+
+        .cart-drawer-item-info {
+            flex: 1;
+        }
+
+        .cart-drawer-item-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .cart-drawer-item-category {
+            font-size: 0.75rem;
+            color: #92400e;
+            background: #fef3c7;
+            padding: 0.15rem 0.5rem;
+            border-radius: 0.5rem;
+            display: inline-block;
+        }
+
+        .cart-drawer-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .cart-drawer-qty-btn {
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 50%;
+            border: none;
+            background: #fed7aa;
+            color: #7c2d12;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .cart-drawer-qty-btn:active {
+            background: #fdba74;
+        }
+
+        .cart-drawer-quantity {
+            font-weight: 600;
+            min-width: 2rem;
+            text-align: center;
+            color: #1f2937;
+        }
+
+        .cart-drawer-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #9ca3af;
+        }
+
+        .cart-drawer-empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        /* 调整主内容区底部边距，避免被购物车栏遮挡 */
+        .content {
+            padding-bottom: 80px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 管理弹窗 */
+        .admin-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 400;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .admin-modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-modal {
+            background: white;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .admin-modal-header {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 1rem 1rem 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .admin-modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .admin-modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .admin-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .admin-modal-body {
+            padding: 1.5rem;
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #fed7aa;
+        }
+
+        .admin-tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 1rem;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .admin-tab.active {
+            color: #f97316;
+            border-bottom-color: #f97316;
+            font-weight: 600;
+        }
+
+        .admin-tab-content {
+            display: none;
+        }
+
+        .admin-tab-content.active {
+            display: block;
+        }
+
+        .admin-dish-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .admin-dish-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: #fff7ed;
+            border-radius: 0.75rem;
+            border: 1px solid #fed7aa;
+            gap: 1rem;
+        }
+
+        .admin-dish-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .admin-dish-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 0.5rem;
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: #fed7aa;
+            flex-shrink: 0;
+        }
+
+        .admin-dish-info {
+            flex: 1;
+        }
+
+        .admin-dish-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-dish-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .admin-dish-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .admin-action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .admin-delete-btn {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .admin-delete-btn:hover {
+            background: #fecaca;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* 订单弹窗 */
+        .order-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 400;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .order-modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .order-modal {
+            background: white;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .order-modal-header {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 1rem 1rem 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .order-modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .order-modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .order-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .order-modal-body {
+            padding: 1.5rem;
+        }
+
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .order-card {
+            background: white;
+            border: 2px solid #ffedd5;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .order-card:hover {
+            border-color: #fed7aa;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.15);
+        }
+
+        .order-card.completed {
+            background: #f9fafb;
+            border-color: #e5e7eb;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #fed7aa;
+        }
+
+        .order-info {
+            flex: 1;
+        }
+
+        .order-id {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .order-time {
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        .order-status {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .order-status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .order-status.completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .order-items {
+            margin-bottom: 1rem;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            color: #4b5563;
+        }
+
+        .order-item-name {
+            font-weight: 500;
+        }
+
+        .order-item-quantity {
+            color: #f97316;
+            font-weight: 600;
+        }
+
+        .order-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 2px solid #fed7aa;
+            margin-bottom: 1rem;
+        }
+
+        .order-total-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .order-total-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f97316;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .order-action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .order-complete-btn {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .order-complete-btn:hover {
+            background: #a7f3d0;
+        }
+
+        .order-delete-btn {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .order-delete-btn:hover {
+            background: #fecaca;
+        }
+
+        .order-empty {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #9ca3af;
+        }
+
+        .order-empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        /* 心愿墙弹窗 */
+        .wish-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 400;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .wish-modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wish-modal {
+            background: white;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .wish-modal-header {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 1rem 1rem 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .wish-modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .wish-modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .wish-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .wish-modal-body {
+            padding: 1.5rem;
+        }
+
+        .wish-add-form {
+            background: #fef3c7;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid #fde68a;
+        }
+
+        .wish-add-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 1rem;
+        }
+
+        .wish-input-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .wish-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #fde68a;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .wish-input:focus {
+            outline: none;
+            border-color: #fbbf24;
+        }
+
+        .wish-add-btn {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+        }
+
+        .wish-add-btn:active {
+            transform: scale(0.98);
+        }
+
+        .wish-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .wish-card {
+            background: white;
+            border: 2px solid #fde68a;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .wish-card:hover {
+            border-color: #fbbf24;
+            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
+        }
+
+        .wish-card.completed {
+            background: #f9fafb;
+            border-color: #e5e7eb;
+        }
+
+        .wish-card.added {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .wish-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .wish-info {
+            flex: 1;
+        }
+
+        .wish-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .wish-note {
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .wish-status {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .wish-status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .wish-status.added {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .wish-status.learning {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .wish-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .wish-action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .wish-learning-btn {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .wish-learning-btn:hover {
+            background: #bfdbfe;
+        }
+
+        .wish-added-btn {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .wish-added-btn:hover {
+            background: #a7f3d0;
+        }
+
+        .wish-delete-btn {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .wish-delete-btn:hover {
+            background: #fecaca;
+        }
+
+        .wish-empty {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #9ca3af;
+        }
+
+        .wish-empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
     <div id="app" class="app">
         <header class="header">
             <div class="header-content">
-                <h1>🍳 菜谱助手</h1>
-                <nav class="nav">
-                    <button class="nav-btn" :class="{active: view === 'dishes'}" @click="view = 'dishes'">
-                        菜品
+                <h1 class="header-title">🍳 崔宝的御膳房</h1>
+                <div class="header-buttons">
+                    <button class="admin-btn" @click="openWishModal">
+                        💛 心愿墙
                     </button>
-                    <button class="nav-btn" :class="{active: view === 'cart'}" @click="view = 'cart'">
-                        购物车
-                        <span v-if="cartCount > 0" class="badge">{{ cartCount }}</span>
+                    <button class="admin-btn" @click="openOrderModal">
+                        📋 订单
                     </button>
-                </nav>
+                    <button class="admin-btn" @click="openAdminModal">
+                        ⚙️ 管理
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -600,78 +1637,41 @@
             <div class="content">
             <!-- 菜品页面 -->
             <div v-show="view === 'dishes'">
-                <button class="add-btn" @click="toggleForm">
-                    {{ showForm ? '取消' : '+ 添加新菜品' }}
-                </button>
-
-                <!-- 添加表单 -->
-                <div v-show="showForm" class="form-card">
-                    <h3>录入新菜品</h3>
-                    <form @submit.prevent="addDish">
-                        <div class="form-group">
-                            <label class="form-label">菜品图片</label>
-                            <div class="image-upload">
-                                <input type="file" accept="image/*" @change="handleImageUpload">
-                                <div v-if="!newDish.image" class="image-upload-placeholder">
-                                    <div class="image-upload-placeholder-icon">📷</div>
-                                    <div>点击上传菜品图片</div>
-                                </div>
-                                <img v-else :src="newDish.image" class="image-preview">
-                                <button v-if="newDish.image" type="button" class="image-remove" @click="removeImage">✕</button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">菜品分类 *</label>
-                            <select v-model="newDish.category" class="form-select" required>
-                                <option value="">请选择分类</option>
-                                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">菜名 *</label>
-                            <input v-model="newDish.name" type="text" class="form-input" placeholder="例如：宫保鸡丁" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">标签（逗号分隔）</label>
-                            <input v-model="newDish.tagsStr" type="text" class="form-input" placeholder="例如：川菜,辣,荤菜">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">难度</label>
-                            <select v-model="newDish.difficulty" class="form-select">
-                                <option>简单</option>
-                                <option>中等</option>
-                                <option>困难</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">制作步骤</label>
-                            <textarea v-model="newDish.steps" class="form-textarea" placeholder="每行一个步骤&#10;1. 准备食材&#10;2. 处理食材&#10;3. 烹饪..."></textarea>
-                        </div>
-                        <button type="submit" class="submit-btn">保存菜品</button>
-                    </form>
-                </div>
-
                 <!-- 菜品列表 -->
                 <div v-if="filteredDishes.length === 0" class="empty">
                     <div class="empty-icon">🍽️</div>
-                    <p>{{ currentCategory }}分类下还没有菜品<br>点击上方按钮添加吧！</p>
+                    <p>{{ currentCategory }}分类下还没有菜品<br>点击右上角“管理”按钮添加吧！</p>
                 </div>
 
                 <div v-for="dish in filteredDishes" :key="dish.id" class="dish-card">
-                    <img v-if="dish.image" :src="dish.image" class="dish-image">
-                    <div class="dish-header">
-                        <div>
-                            <div class="dish-name">{{ dish.name }}</div>
-                            <div class="tags">
-                                <span class="tag tag-category">{{ dish.category }}</span>
-                                <span v-for="tag in dish.tags" :key="tag" class="tag">{{ tag }}</span>
-                                <span class="tag tag-difficulty">{{ dish.difficulty }}</span>
+                    <img v-if="dish.image" :src="dish.image" class="dish-image" :alt="dish.name">
+                    <div v-else class="dish-image-placeholder">🍲</div>
+                    
+                    <div class="dish-content">
+                        <div class="dish-name">{{ dish.name }}</div>
+                        <div class="tags">
+                            <span class="tag tag-category">{{ dish.category }}</span>
+                            <span v-for="tag in dish.tags" :key="tag" class="tag">{{ tag }}</span>
+                            <span class="tag tag-difficulty">{{ dish.difficulty }}</span>
+                        </div>
+                        <div v-if="dish.steps">
+                            <div class="dish-steps" :class="{expanded: isDishExpanded(dish.id)}">{{ dish.steps }}</div>
+                            <div v-if="isDishStepsTruncated(dish.steps)" class="dish-expand-hint" @click="toggleDishExpand(dish.id)">
+                                {{ isDishExpanded(dish.id) ? '收起 ▲' : '展开更多 ▼' }}
                             </div>
                         </div>
-                        <button class="delete-btn" @click="deleteDish(dish.id)">删除</button>
                     </div>
-                    <div v-if="dish.steps" class="dish-steps">{{ dish.steps }}</div>
-                    <button class="cart-btn" @click="addToCart(dish)">加入购物车</button>
+                    
+                    <div class="dish-quantity-control">
+                        <button v-if="!getDishQuantity(dish.id)" class="dish-add-btn" @click="addToCart(dish)">
+                            +
+                        </button>
+                        <div v-else class="dish-quantity-display">
+                            <button class="dish-qty-btn" @click="decreaseDishQty(dish)">−</button>
+                            <span class="dish-quantity-num">{{ getDishQuantity(dish.id) }}</span>
+                            <button class="dish-qty-btn" @click="increaseDishQty(dish)">+</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -686,7 +1686,8 @@
 
                 <div v-else>
                     <div v-for="item in cart" :key="item.id" class="cart-item">
-                        <img v-if="item.image" :src="item.image" class="dish-image">
+                        <img v-if="item.image" :src="item.image" class="dish-image" :alt="item.name">
+                        <div v-else class="dish-image-placeholder">🍲</div>
                         <div class="item-header">
                             <div>
                                 <div class="item-name">{{ item.name }}</div>
@@ -718,6 +1719,274 @@
             </div>
             </div>
         </main>
+
+        <!-- 底部浮动购物车栏 -->
+        <div class="float-cart-bar" v-show="view === 'dishes'">
+            <button class="cart-icon-btn" @click="toggleCartDrawer">
+                🛒
+                <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
+            </button>
+            
+            <div class="cart-info" @click="toggleCartDrawer">
+                <div class="cart-total-text">已选</div>
+                <div class="cart-total-amount">{{ totalItems }} 道菜</div>
+            </div>
+            
+            <button class="checkout-btn" :disabled="cart.length === 0" @click="placeOrder">
+                确认下单
+            </button>
+        </div>
+
+        <!-- 购物车抽屉 -->
+        <div class="cart-drawer-overlay" :class="{show: showCartDrawer}" @click="closeCartDrawer"></div>
+        <div class="cart-drawer" :class="{show: showCartDrawer}">
+            <div class="cart-drawer-header">
+                <div class="cart-drawer-title">购物车 ({{ cartCount }})</div>
+                <button class="cart-drawer-close" @click="closeCartDrawer">✕</button>
+            </div>
+            
+            <div v-if="cart.length === 0" class="cart-drawer-empty">
+                <div class="cart-drawer-empty-icon">🛒</div>
+                <p>购物车是空的</p>
+            </div>
+            
+            <div v-else>
+                <div v-for="item in cart" :key="item.id" class="cart-drawer-item">
+                    <img v-if="item.image" :src="item.image" class="cart-drawer-item-image" :alt="item.name">
+                    <div v-else class="cart-drawer-item-placeholder">🍲</div>
+                    
+                    <div class="cart-drawer-item-info">
+                        <div class="cart-drawer-item-name">{{ item.name }}</div>
+                        <div class="cart-drawer-item-category">{{ item.category }}</div>
+                    </div>
+                    
+                    <div class="cart-drawer-item-controls">
+                        <button class="cart-drawer-qty-btn" @click="decreaseQty(item)">-</button>
+                        <span class="cart-drawer-quantity">{{ item.quantity }}</span>
+                        <button class="cart-drawer-qty-btn" @click="increaseQty(item)">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 管理弹窗 -->
+        <div class="admin-modal-overlay" :class="{show: showAdminModal}" @click="closeAdminModal">
+            <div class="admin-modal" @click.stop>
+                <div class="admin-modal-header">
+                    <h2 class="admin-modal-title">⚙️ 崔宝的御膳房 - 菜品管理</h2>
+                    <button class="admin-modal-close" @click="closeAdminModal">✕</button>
+                </div>
+                <div class="admin-modal-body">
+                    <!-- 管理标签页 -->
+                    <div class="admin-tabs">
+                        <button 
+                            class="admin-tab" 
+                            :class="{active: adminTab === 'add'}"
+                            @click="adminTab = 'add'"
+                        >
+                            ➕ 添加菜品
+                        </button>
+                        <button 
+                            class="admin-tab" 
+                            :class="{active: adminTab === 'manage'}"
+                            @click="adminTab = 'manage'"
+                        >
+                            📋 管理菜品
+                        </button>
+                    </div>
+
+                    <!-- 添加菜品 -->
+                    <div class="admin-tab-content" :class="{active: adminTab === 'add'}">
+                        <div class="form-card">
+                            <form @submit.prevent="addDish">
+                                <div class="form-group">
+                                    <label class="form-label">菜品图片</label>
+                                    <div class="image-upload">
+                                        <input type="file" accept="image/*" @change="handleImageUpload">
+                                        <div v-if="!newDish.image" class="image-upload-placeholder">
+                                            <div class="image-upload-placeholder-icon">📷</div>
+                                            <div>点击上传菜品图片</div>
+                                        </div>
+                                        <img v-else :src="newDish.image" class="image-preview">
+                                        <button v-if="newDish.image" type="button" class="image-remove" @click="removeImage">✕</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">菜品分类 *</label>
+                                    <select v-model="newDish.category" class="form-select" required>
+                                        <option value="">请选择分类</option>
+                                        <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">菜名 *</label>
+                                    <input v-model="newDish.name" type="text" class="form-input" placeholder="例如：宫保鸡丁" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">标签（逗号分隔）</label>
+                                    <input v-model="newDish.tagsStr" type="text" class="form-input" placeholder="例如：川菜,辣,荤菜">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">难度</label>
+                                    <select v-model="newDish.difficulty" class="form-select">
+                                        <option>简单</option>
+                                        <option>中等</option>
+                                        <option>困难</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">制作步骤</label>
+                                    <textarea v-model="newDish.steps" class="form-textarea" placeholder="每行一个步骤&#10;1. 准备食材&#10;2. 处理食材&#10;3. 烹饪..."></textarea>
+                                </div>
+                                <button type="submit" class="submit-btn">保存菜品</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 管理菜品 -->
+                    <div class="admin-tab-content" :class="{active: adminTab === 'manage'}">
+                        <div v-if="dishes.length === 0" class="empty">
+                            <div class="empty-icon">🍽️</div>
+                            <p>还没有任何菜品<br>请先添加菜品</p>
+                        </div>
+                        <div v-else class="admin-dish-list">
+                            <div v-for="dish in dishes" :key="dish.id" class="admin-dish-item">
+                                <img v-if="dish.image" :src="dish.image" class="admin-dish-image" :alt="dish.name">
+                                <div v-else class="admin-dish-placeholder">🍲</div>
+                                <div class="admin-dish-info">
+                                    <div class="admin-dish-name">{{ dish.name }}</div>
+                                    <div class="admin-dish-meta">
+                                        <span class="tag tag-category">{{ dish.category }}</span>
+                                        <span v-for="tag in dish.tags" :key="tag" class="tag">{{ tag }}</span>
+                                        <span class="tag tag-difficulty">{{ dish.difficulty }}</span>
+                                    </div>
+                                </div>
+                                <div class="admin-dish-actions">
+                                    <button class="admin-action-btn admin-delete-btn" @click="deleteDish(dish.id)">
+                                        🗑️ 删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 订单弹窗 -->
+        <div class="order-modal-overlay" :class="{show: showOrderModal}" @click="closeOrderModal">
+            <div class="order-modal" @click.stop>
+                <div class="order-modal-header">
+                    <h2 class="order-modal-title">📋 历史订单</h2>
+                    <button class="order-modal-close" @click="closeOrderModal">✕</button>
+                </div>
+                <div class="order-modal-body">
+                    <div v-if="orders.length === 0" class="order-empty">
+                        <div class="order-empty-icon">📄</div>
+                        <p>还没有订单记录<br>去点菜页面加菜下单吧！</p>
+                    </div>
+                    <div v-else class="order-list">
+                        <div v-for="order in sortedOrders" :key="order.id" class="order-card" :class="{completed: order.status === 'completed'}">
+                            <div class="order-header">
+                                <div class="order-info">
+                                    <div class="order-id">订单编号：{{ order.id }}</div>
+                                    <div class="order-time">🕒 {{ order.createdAt }}</div>
+                                </div>
+                                <div class="order-status" :class="order.status === 'completed' ? 'completed' : 'pending'">
+                                    {{ order.status === 'completed' ? '✅ 已完成' : '🕒 进行中' }}
+                                </div>
+                            </div>
+                            <div class="order-items">
+                                <div v-for="item in order.items" :key="item.id" class="order-item">
+                                    <span class="order-item-name">{{ item.name }}</span>
+                                    <span class="order-item-quantity">× {{ item.quantity }}</span>
+                                </div>
+                            </div>
+                            <div class="order-total">
+                                <span class="order-total-label">总计</span>
+                                <span class="order-total-value">{{ order.total }} 道菜</span>
+                            </div>
+                            <div class="order-actions">
+                                <button v-if="order.status !== 'completed'" class="order-action-btn order-complete-btn" @click="completeOrder(order.id)">
+                                    ✅ 标记完成
+                                </button>
+                                <button class="order-action-btn order-delete-btn" @click="deleteOrder(order.id)">
+                                    🗑️ 删除订单
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 心愿墙弹窗 -->
+        <div class="wish-modal-overlay" :class="{show: showWishModal}" @click="closeWishModal">
+            <div class="wish-modal" @click.stop>
+                <div class="wish-modal-header">
+                    <h2 class="wish-modal-title">💛 心愿墙 - 想吃的菜</h2>
+                    <button class="wish-modal-close" @click="closeWishModal">✕</button>
+                </div>
+                <div class="wish-modal-body">
+                    <!-- 添加心愿表单 -->
+                    <div class="wish-add-form">
+                        <div class="wish-add-title">✨ 添加新心愿</div>
+                        <div class="wish-input-group">
+                            <input 
+                                v-model="newWish.name" 
+                                type="text" 
+                                class="wish-input" 
+                                placeholder="想吃什么菜？（必填）"
+                                @keyup.enter="addWish"
+                            >
+                            <button class="wish-add-btn" @click="addWish">➕ 添加</button>
+                        </div>
+                        <input 
+                            v-model="newWish.note" 
+                            type="text" 
+                            class="wish-input" 
+                            placeholder="备注（可选）：例如想吃的原因、口味喜好等"
+                            @keyup.enter="addWish"
+                        >
+                    </div>
+
+                    <!-- 心愿列表 -->
+                    <div v-if="wishes.length === 0" class="wish-empty">
+                        <div class="wish-empty-icon">🌟</div>
+                        <p>还没有心愿<br>添加你想吃的菜吧！</p>
+                    </div>
+                    <div v-else class="wish-list">
+                        <div v-for="wish in sortedWishes" :key="wish.id" class="wish-card" :class="wish.status">
+                            <div class="wish-content">
+                                <div class="wish-info">
+                                    <div class="wish-name">🍲 {{ wish.name }}</div>
+                                    <div v-if="wish.note" class="wish-note">📝 {{ wish.note }}</div>
+                                </div>
+                                <div class="wish-status" :class="wish.status">
+                                    <span v-if="wish.status === 'pending'">🕒 待实现</span>
+                                    <span v-else-if="wish.status === 'learning'">📚 学习中</span>
+                                    <span v-else-if="wish.status === 'added'">✅ 已加入</span>
+                                </div>
+                            </div>
+                            <div class="wish-actions">
+                                <button v-if="wish.status === 'pending'" class="wish-action-btn wish-learning-btn" @click="updateWishStatus(wish.id, 'learning')">
+                                    📚 开始学习
+                                </button>
+                                <button v-if="wish.status === 'learning'" class="wish-action-btn wish-added-btn" @click="updateWishStatus(wish.id, 'added')">
+                                    ✅ 已加入菜单
+                                </button>
+                                <button v-if="wish.status === 'pending'" class="wish-action-btn wish-added-btn" @click="updateWishStatus(wish.id, 'added')">
+                                    ✅ 直接加入菜单
+                                </button>
+                                <button class="wish-action-btn wish-delete-btn" @click="deleteWish(wish.id)">
+                                    🗑️ 删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -729,10 +1998,22 @@
                 return {
                     view: 'dishes',
                     showForm: false,
-                    categories: ['现炒肉类', '蔬菜', '炖汤', '烧烤', '饮料', '小吃', '内蒙风味'],
+                    showCartDrawer: false,
+                    showAdminModal: false,
+                    showOrderModal: false,
+                    showWishModal: false,
+                    adminTab: 'add',
+                    expandedDishes: {},
+                    categories: ['现炒肉类', '蔬菜', '炖汤', '烧烤', '饮料', '小吃', '内蒙风味', '粤式早点'],
                     currentCategory: '现炒肉类',
                     dishes: [],
                     cart: [],
+                    orders: [],
+                    wishes: [],
+                    newWish: {
+                        name: '',
+                        note: ''
+                    },
                     newDish: {
                         name: '',
                         category: '',
@@ -752,6 +2033,12 @@
                 },
                 filteredDishes() {
                     return this.dishes.filter(dish => dish.category === this.currentCategory);
+                },
+                sortedOrders() {
+                    return this.orders.slice().sort((a, b) => b.id - a.id);
+                },
+                sortedWishes() {
+                    return this.wishes.slice().sort((a, b) => b.id - a.id);
                 }
             },
             mounted() {
@@ -794,9 +2081,54 @@
                     if (savedCart) {
                         this.cart = JSON.parse(savedCart);
                     }
+                    
+                    const savedOrders = localStorage.getItem('orders');
+                    if (savedOrders) {
+                        this.orders = JSON.parse(savedOrders);
+                    }
+                    
+                    const savedWishes = localStorage.getItem('wishes');
+                    if (savedWishes) {
+                        this.wishes = JSON.parse(savedWishes);
+                    }
                 },
                 getCategoryCount(category) {
                     return this.dishes.filter(dish => dish.category === category).length;
+                },
+                getDishQuantity(dishId) {
+                    const item = this.cart.find(item => item.id === dishId);
+                    return item ? item.quantity : 0;
+                },
+                toggleDishExpand(dishId) {
+                    this.expandedDishes[dishId] = !this.expandedDishes[dishId];
+                },
+                isDishExpanded(dishId) {
+                    return this.expandedDishes[dishId] || false;
+                },
+                isDishStepsTruncated(steps) {
+                    if (!steps) return false;
+                    const lines = steps.split('\n').length;
+                    return lines > 2 || steps.length > 100;
+                },
+                increaseDishQty(dish) {
+                    const existing = this.cart.find(item => item.id === dish.id);
+                    if (existing) {
+                        existing.quantity++;
+                    } else {
+                        this.cart.push({ ...dish, quantity: 1 });
+                    }
+                    this.saveCart();
+                },
+                decreaseDishQty(dish) {
+                    const existing = this.cart.find(item => item.id === dish.id);
+                    if (existing) {
+                        if (existing.quantity > 1) {
+                            existing.quantity--;
+                        } else {
+                            this.cart = this.cart.filter(item => item.id !== dish.id);
+                        }
+                        this.saveCart();
+                    }
                 },
                 handleImageUpload(event) {
                     const file = event.target.files[0];
@@ -813,6 +2145,30 @@
                 },
                 toggleForm() {
                     this.showForm = !this.showForm;
+                },
+                openAdminModal() {
+                    this.showAdminModal = true;
+                },
+                closeAdminModal() {
+                    this.showAdminModal = false;
+                },
+                openOrderModal() {
+                    this.showOrderModal = true;
+                },
+                closeOrderModal() {
+                    this.showOrderModal = false;
+                },
+                openWishModal() {
+                    this.showWishModal = true;
+                },
+                closeWishModal() {
+                    this.showWishModal = false;
+                },
+                toggleCartDrawer() {
+                    this.showCartDrawer = !this.showCartDrawer;
+                },
+                closeCartDrawer() {
+                    this.showCartDrawer = false;
                 },
                 addDish() {
                     const tags = this.newDish.tagsStr
@@ -841,9 +2197,12 @@
                         difficulty: '简单',
                         steps: ''
                     };
-                    this.showForm = false;
                     // 切换到新增菜品的分类
                     this.currentCategory = dish.category;
+                    // 切换到管理标签页
+                    this.adminTab = 'manage';
+                    
+                    alert('菜品添加成功！');
                 },
                 deleteDish(id) {
                     if (confirm('确定要删除这道菜吗？')) {
@@ -886,24 +2245,75 @@
                         id: Date.now(),
                         items: [...this.cart],
                         total: this.totalItems,
-                        createdAt: new Date().toLocaleString('zh-CN')
+                        createdAt: new Date().toLocaleString('zh-CN'),
+                        status: 'pending'
                     };
                     
-                    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-                    orders.push(order);
-                    localStorage.setItem('orders', JSON.stringify(orders));
+                    this.orders.push(order);
+                    this.saveOrders();
                     
                     alert(`订单已创建！\n共 ${order.total} 道菜\n时间：${order.createdAt}`);
                     
                     this.cart = [];
                     this.saveCart();
-                    this.view = 'dishes';
+                    this.closeCartDrawer();
+                },
+                completeOrder(orderId) {
+                    const order = this.orders.find(o => o.id === orderId);
+                    if (order) {
+                        order.status = 'completed';
+                        this.saveOrders();
+                    }
+                },
+                deleteOrder(orderId) {
+                    if (confirm('确定要删除这个订单吗？')) {
+                        this.orders = this.orders.filter(o => o.id !== orderId);
+                        this.saveOrders();
+                    }
                 },
                 saveDishes() {
                     localStorage.setItem('dishes', JSON.stringify(this.dishes));
                 },
                 saveCart() {
                     localStorage.setItem('cart', JSON.stringify(this.cart));
+                },
+                saveOrders() {
+                    localStorage.setItem('orders', JSON.stringify(this.orders));
+                },
+                addWish() {
+                    if (!this.newWish.name.trim()) {
+                        alert('请输入想吃的菜名');
+                        return;
+                    }
+                    
+                    const wish = {
+                        id: Date.now(),
+                        name: this.newWish.name.trim(),
+                        note: this.newWish.note.trim(),
+                        status: 'pending',
+                        createdAt: new Date().toLocaleString('zh-CN')
+                    };
+                    
+                    this.wishes.push(wish);
+                    this.saveWishes();
+                    
+                    this.newWish = { name: '', note: '' };
+                },
+                updateWishStatus(wishId, newStatus) {
+                    const wish = this.wishes.find(w => w.id === wishId);
+                    if (wish) {
+                        wish.status = newStatus;
+                        this.saveWishes();
+                    }
+                },
+                deleteWish(wishId) {
+                    if (confirm('确定要删除这个心愿吗？')) {
+                        this.wishes = this.wishes.filter(w => w.id !== wishId);
+                        this.saveWishes();
+                    }
+                },
+                saveWishes() {
+                    localStorage.setItem('wishes', JSON.stringify(this.wishes));
                 }
             }
         }).mount('#app');

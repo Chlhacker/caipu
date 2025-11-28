@@ -1,7 +1,7 @@
 {
-  "name": "菜谱助手",
-  "short_name": "菜谱",
-  "description": "记录学会的菜品，支持录入新菜与简单下单",
+  "name": "崔宝的御膳房",
+  "short_name": "御膳房",
+  "description": "崔宝的御膳房 - 记录学会的菜品，支持录入新菜与简单下单",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
