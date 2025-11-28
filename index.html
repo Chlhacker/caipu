@@ -2442,18 +2442,18 @@ git push</pre>
                 },
                 async loadFromJsonFile() {
                     try {
-                        const response = await fetch('data.json');
+                        const response = await fetch('data.json?t=' + Date.now()); // 防止缓存
                         if (response.ok) {
                             const data = await response.json();
                             console.log('✅ 成功从 data.json 加载数据');
                             
                             if (data.dishes) {
                                 this.dishes = data.dishes;
-                                this.saveDishes();
+                                // 不再保存到 localStorage
                             }
                             if (data.orders) {
                                 this.orders = data.orders;
-                                this.saveOrders();
+                                // 不再保存到 localStorage
                             }
                             if (data.wishes) {
                                 this.wishes = data.wishes;
@@ -2487,10 +2487,10 @@ git push</pre>
                             image: '',
                             tags: ['荤菜', '下饭'], 
                             difficulty: '中等', 
-                            steps: '1. 五花肉切块\n2. 焯水去腥\n3. 炒糖色\n4. 炖煮40分钟' 
+                            steps: '1. 五花肉切块\n2. 焦水去腥\n3. 炒糖色\n4. 炖煮40分钟' 
                         }
                     ];
-                    this.saveDishes();
+                    // 不再保存到 localStorage
                 },
                 getCategoryCount(category) {
                     return this.dishes.filter(dish => dish.category === category).length;
@@ -2744,15 +2744,17 @@ git push</pre>
                     }
                 },
                 saveDishes() {
-                    localStorage.setItem('dishes', JSON.stringify(this.dishes));
-                    this.autoSaveToServer(); // 自动保存到服务器
+                    // 不保存到 localStorage（图片太大会超出限制）
+                    // localStorage.setItem('dishes', JSON.stringify(this.dishes));
+                    this.autoSaveToServer(); // 只保存到服务器
                 },
                 saveCart() {
                     localStorage.setItem('cart', JSON.stringify(this.cart));
                 },
                 saveOrders() {
-                    localStorage.setItem('orders', JSON.stringify(this.orders));
-                    this.autoSaveToServer(); // 自动保存到服务器
+                    // 不保存到 localStorage（订单包含菜品图片，太大）
+                    // localStorage.setItem('orders', JSON.stringify(this.orders));
+                    this.autoSaveToServer(); // 只保存到服务器
                 },
                 addWish() {
                     if (!this.newWish.name.trim()) {
@@ -2804,7 +2806,12 @@ git push</pre>
                                 wishes: this.wishes
                             };
                             
-                            const response = await fetch('http://localhost:3000/api/save-data', {
+                            // 使用相对路径，自动适配 localhost 和 Netlify
+                            const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                                ? 'http://localhost:3000/api/save-data'
+                                : '/api/save-data'; // Netlify 需要部署 serverless 函数
+                            
+                            const response = await fetch(apiUrl, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json'
@@ -2821,7 +2828,7 @@ git push</pre>
                             }
                         } catch (error) {
                             // 静默失败，不影响用户体验
-                            console.log('⚠️ 无法连接到服务器，数据仅保存在本地');
+                            console.log('⚠️ 无法连接到服务器，数据仅保存在内存中');
                         }
                     }, 1000); // 1秒后保存，避免频繁请求
                 },
@@ -2840,22 +2847,18 @@ git push</pre>
                                 if (newOrderCount > oldOrderCount) {
                                     // 有新订单
                                     this.orders = data.orders;
-                                    this.saveOrders();
                                     console.log(`🔔 检测到 ${newOrderCount - oldOrderCount} 个新订单`);
-                                } else if (newOrderCount < oldOrderCount) {
-                                    // 订单被删除
+                                } else if (newOrderCount < oldOrderCount || newOrderCount !== oldOrderCount) {
+                                    // 订单被删除或修改
                                     this.orders = data.orders;
-                                    this.saveOrders();
                                 }
                                 
                                 // 更新菜品和心愿列表
                                 if (data.dishes) {
                                     this.dishes = data.dishes;
-                                    localStorage.setItem('dishes', JSON.stringify(this.dishes));
                                 }
                                 if (data.wishes) {
                                     this.wishes = data.wishes;
-                                    localStorage.setItem('wishes', JSON.stringify(this.wishes));
                                 }
                             }
                         } catch (error) {
