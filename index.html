@@ -1657,6 +1657,177 @@
             font-size: 4rem;
             margin-bottom: 1rem;
         }
+
+        /* 数据管理弹窗 */
+        .data-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 400;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .data-modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .data-modal {
+            background: white;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .data-modal-header {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 1rem 1rem 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .data-modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .data-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .data-modal-body {
+            padding: 1.5rem;
+        }
+
+        .data-section {
+            background: #f9fafb;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid #e5e7eb;
+        }
+
+        .data-section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .data-section-desc {
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .data-action-btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .data-export-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .data-export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .data-import-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .data-import-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .data-clear-btn {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .data-clear-btn:hover {
+            background: #fecaca;
+        }
+
+        .data-info {
+            background: #eff6ff;
+            border: 2px solid #dbeafe;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .data-info-title {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        .data-info-item {
+            color: #4b5563;
+            font-size: 0.875rem;
+            padding: 0.25rem 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .data-info-value {
+            font-weight: 600;
+            color: #8b5cf6;
+        }
+
+        .file-input-hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -1670,6 +1841,9 @@
                     </button>
                     <button class="admin-btn" @click="openOrderModal">
                         📋 订单
+                    </button>
+                    <button class="admin-btn" @click="openDataModal">
+                        💾 数据
                     </button>
                     <button class="admin-btn" @click="openAdminModal">
                         ⚙️ 管理
@@ -2099,6 +2273,92 @@
                 </div>
             </div>
         </div>
+
+        <!-- 数据管理弹窗 -->
+        <div class="data-modal-overlay" :class="{show: showDataModal}" @click="closeDataModal">
+            <div class="data-modal" @click.stop>
+                <div class="data-modal-header">
+                    <h2 class="data-modal-title">💾 数据管理</h2>
+                    <button class="data-modal-close" @click="closeDataModal">✕</button>
+                </div>
+                <div class="data-modal-body">
+                    <!-- 导出数据 -->
+                    <div class="data-section">
+                        <div class="data-section-title">
+                            📤 导出数据
+                        </div>
+                        <div class="data-section-desc">
+                            将所有数据（菜品、订单、心愿墙）导出为 JSON 文件，可以通过 Git/GitHub 同步或本地备份。
+                        </div>
+                        <button class="data-action-btn data-export-btn" @click="exportData">
+                            📥 导出所有数据
+                        </button>
+                        <div class="data-info">
+                            <div class="data-info-title">📊 当前数据统计</div>
+                            <div class="data-info-item">
+                                <span>菜品数量：</span>
+                                <span class="data-info-value">{{ dishes.length }} 道</span>
+                            </div>
+                            <div class="data-info-item">
+                                <span>订单数量：</span>
+                                <span class="data-info-value">{{ orders.length }} 个</span>
+                            </div>
+                            <div class="data-info-item">
+                                <span>心愿数量：</span>
+                                <span class="data-info-value">{{ wishes.length }} 个</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 导入数据 -->
+                    <div class="data-section">
+                        <div class="data-section-title">
+                            📥 导入数据
+                        </div>
+                        <div class="data-section-desc">
+                            从 JSON 文件导入数据，恢复之前的备份或从其他设备同步数据。
+                            <br><strong style="color: #dc2626;">⚠️ 注意：导入会覆盖当前数据！</strong>
+                        </div>
+                        <input type="file" ref="fileInput" class="file-input-hidden" accept=".json" @change="importData">
+                        <button class="data-action-btn data-import-btn" @click="$refs.fileInput.click()">
+                            📂 选择文件导入
+                        </button>
+                    </div>
+
+                    <!-- Git 同步指南 -->
+                    <div class="data-section">
+                        <div class="data-section-title">
+                            🐙 Git/GitHub 同步指南
+                        </div>
+                        <div class="data-section-desc" style="line-height: 1.8;">
+                            <strong>1、导出数据：</strong>点击上方“导出所有数据”按钮<br>
+                            <strong>2、保存文件：</strong>将下载的 <code>caipu-data.json</code> 文件放到项目根目录<br>
+                            <strong>3、Git 提交：</strong>
+                            <pre style="background: #f3f4f6; padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem 0; overflow-x: auto;">git add caipu-data.json
+git commit -m "更新菜品数据"
+git push</pre>
+                            <strong>4、其他设备同步：</strong>
+                            <pre style="background: #f3f4f6; padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem 0; overflow-x: auto;">git pull
+然后导入 caipu-data.json 文件</pre>
+                        </div>
+                    </div>
+
+                    <!-- 清空数据 -->
+                    <div class="data-section">
+                        <div class="data-section-title">
+                            🗑️ 清空数据
+                        </div>
+                        <div class="data-section-desc">
+                            删除所有本地数据，重置为初始状态。
+                            <br><strong style="color: #dc2626;">⚠️ 此操作不可恢复，请先导出备份！</strong>
+                        </div>
+                        <button class="data-action-btn data-clear-btn" @click="clearAllData">
+                            🗑️ 清空所有数据
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -2114,6 +2374,7 @@
                     showAdminModal: false,
                     showOrderModal: false,
                     showWishModal: false,
+                    showDataModal: false,
                     adminTab: 'add',
                     expandedDishes: {},
                     categories: ['现炒肉类', '蔬菜', '炖汤', '烧烤', '饮料', '小吃', '内蒙风味', '粤式早点'],
@@ -2284,6 +2545,12 @@
                 },
                 closeWishModal() {
                     this.showWishModal = false;
+                },
+                openDataModal() {
+                    this.showDataModal = true;
+                },
+                closeDataModal() {
+                    this.showDataModal = false;
                 },
                 toggleCartDrawer() {
                     this.showCartDrawer = !this.showCartDrawer;
@@ -2494,6 +2761,88 @@
                 },
                 saveWishes() {
                     localStorage.setItem('wishes', JSON.stringify(this.wishes));
+                },
+                exportData() {
+                    const data = {
+                        version: '1.0',
+                        exportTime: new Date().toLocaleString('zh-CN'),
+                        dishes: this.dishes,
+                        orders: this.orders,
+                        wishes: this.wishes
+                    };
+                    
+                    const dataStr = JSON.stringify(data, null, 2);
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `caipu-data-${new Date().getTime()}.json`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    
+                    alert('数据导出成功！\n文件已下载。');
+                },
+                importData(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    
+                    if (!confirm('导入数据将覆盖当前所有数据，是否继续？\n\n建议先导出当前数据作为备份！')) {
+                        event.target.value = '';
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            
+                            if (data.dishes) {
+                                this.dishes = data.dishes;
+                                this.saveDishes();
+                            }
+                            if (data.orders) {
+                                this.orders = data.orders;
+                                this.saveOrders();
+                            }
+                            if (data.wishes) {
+                                this.wishes = data.wishes;
+                                this.saveWishes();
+                            }
+                            
+                            alert(`数据导入成功！
+
+菜品：${data.dishes?.length || 0} 道
+订单：${data.orders?.length || 0} 个
+心愿：${data.wishes?.length || 0} 个`);
+                            this.closeDataModal();
+                        } catch (error) {
+                            alert('文件格式错误，请选择正确的 JSON 文件！');
+                        }
+                        event.target.value = '';
+                    };
+                    reader.readAsText(file);
+                },
+                clearAllData() {
+                    if (!confirm('确定要清空所有数据吗？\n\n这将删除：\n- 所有菜品\n- 所有订单\n- 所有心愿\n\n此操作不可恢复！')) {
+                        return;
+                    }
+                    
+                    if (!confirm('最后确认：真的要清空吗？')) {
+                        return;
+                    }
+                    
+                    this.dishes = [];
+                    this.orders = [];
+                    this.wishes = [];
+                    this.cart = [];
+                    
+                    localStorage.removeItem('dishes');
+                    localStorage.removeItem('orders');
+                    localStorage.removeItem('wishes');
+                    localStorage.removeItem('cart');
+                    
+                    alert('所有数据已清空！');
+                    this.closeDataModal();
                 }
             }
         }).mount('#app');
