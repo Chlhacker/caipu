@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#f97316">
     <title>🍳 崔宝的御膳房</title>
     <link rel="manifest" href="manifest.json">
+    <!-- LeanCloud SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.2/dist/av-min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1830,8 +1832,8 @@
                     <button class="admin-btn" @click="openOrderModal">
                         📋 订单
                     </button>
-                    <button class="admin-btn" @click="openDataModal">
-                        💾 数据
+                    <button class="admin-btn" @click="exportDataDialog">
+                        💾 导出
                     </button>
                     <button class="admin-btn" @click="openAdminModal">
                         ⚙️ 管理
@@ -2262,27 +2264,17 @@
             </div>
         </div>
 
-        <!-- 数据管理弹窗 -->
-        <div class="data-modal-overlay" :class="{show: showDataModal}" @click="closeDataModal">
-            <div class="data-modal" @click.stop>
+        <!-- 导出数据对话框 -->
+        <div class="data-modal-overlay" :class="{show: showExportDialog}" @click="closeExportDialog">
+            <div class="data-modal" @click.stop style="max-width: 500px;">
                 <div class="data-modal-header">
-                    <h2 class="data-modal-title">💾 数据管理</h2>
-                    <button class="data-modal-close" @click="closeDataModal">✕</button>
+                    <h2 class="data-modal-title">💾 导出数据到本地</h2>
+                    <button class="data-modal-close" @click="closeExportDialog">✕</button>
                 </div>
                 <div class="data-modal-body">
-                    <!-- 导出数据 -->
                     <div class="data-section">
-                        <div class="data-section-title">
-                            📤 导出数据
-                        </div>
-                        <div class="data-section-desc">
-                            将所有数据（菜品、订单、心愿墙）导出为 JSON 文件，可以通过 Git/GitHub 同步或本地备份。
-                        </div>
-                        <button class="data-action-btn data-export-btn" @click="exportData">
-                            📥 导出所有数据
-                        </button>
                         <div class="data-info">
-                            <div class="data-info-title">📊 当前数据统计</div>
+                            <div class="data-info-title">📊 当前云端数据统计</div>
                             <div class="data-info-item">
                                 <span>菜品数量：</span>
                                 <span class="data-info-value">{{ dishes.length }} 道</span>
@@ -2296,52 +2288,18 @@
                                 <span class="data-info-value">{{ wishes.length }} 个</span>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- 导入数据 -->
-                    <div class="data-section">
-                        <div class="data-section-title">
-                            📥 导入数据
+                        
+                        <div class="data-section-desc" style="margin: 1.5rem 0; padding: 1rem; background: #eff6ff; border-radius: 0.5rem; border-left: 4px solid #3b82f6;">
+                            <strong style="color: #1e40af;">💡 导出说明：</strong><br>
+                            <ul style="margin: 0.5rem 0; padding-left: 1.5rem; color: #1e40af; line-height: 1.8;">
+                                <li>将从 LeanCloud 云端获取最新数据并导出到本地 JSON 文件</li>
+                                <li>可用于数据备份、迁移或离线查看</li>
+                                <li>建议定期导出备份，确保数据安全</li>
+                            </ul>
                         </div>
-                        <div class="data-section-desc">
-                            从 JSON 文件导入数据，恢复之前的备份或从其他设备同步数据。
-                            <br><strong style="color: #dc2626;">⚠️ 注意：导入会覆盖当前数据！</strong>
-                        </div>
-                        <input type="file" ref="fileInput" class="file-input-hidden" accept=".json" @change="importData">
-                        <button class="data-action-btn data-import-btn" @click="$refs.fileInput.click()">
-                            📂 选择文件导入
-                        </button>
-                    </div>
-
-                    <!-- Git 同步指南 -->
-                    <div class="data-section">
-                        <div class="data-section-title">
-                            🐙 Git/GitHub 同步指南
-                        </div>
-                        <div class="data-section-desc" style="line-height: 1.8;">
-                            <strong>1、导出数据：</strong>点击上方“导出所有数据”按钮<br>
-                            <strong>2、保存文件：</strong>将下载的 <code>caipu-data.json</code> 文件放到项目根目录<br>
-                            <strong>3、Git 提交：</strong>
-                            <pre style="background: #f3f4f6; padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem 0; overflow-x: auto;">git add caipu-data.json
-git commit -m "更新菜品数据"
-git push</pre>
-                            <strong>4、其他设备同步：</strong>
-                            <pre style="background: #f3f4f6; padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem 0; overflow-x: auto;">git pull
-然后导入 caipu-data.json 文件</pre>
-                        </div>
-                    </div>
-
-                    <!-- 清空数据 -->
-                    <div class="data-section">
-                        <div class="data-section-title">
-                            🗑️ 清空数据
-                        </div>
-                        <div class="data-section-desc">
-                            删除所有本地数据，重置为初始状态。
-                            <br><strong style="color: #dc2626;">⚠️ 此操作不可恢复，请先导出备份！</strong>
-                        </div>
-                        <button class="data-action-btn data-clear-btn" @click="clearAllData">
-                            🗑️ 清空所有数据
+                        
+                        <button class="data-action-btn data-export-btn" @click="confirmExportData" style="width: 100%; font-size: 1.1rem; padding: 1rem;">
+                            ✅ 确认导出
                         </button>
                     </div>
                 </div>
@@ -2362,7 +2320,7 @@ git push</pre>
                     showAdminModal: false,
                     showOrderModal: false,
                     showWishModal: false,
-                    showDataModal: false,
+                    showExportDialog: false,
                     adminTab: 'add',
                     expandedDishes: {},
                     categories: ['现炒肉类', '蔬菜', '炖汤', '烧烤', '饮料', '小吃', '内蒙风味', '粤式早点','养生茶'],
@@ -2414,60 +2372,115 @@ git push</pre>
                 }
             },
             mounted() {
+                // 初始化 LeanCloud
+                this.initLeanCloud();
+                // 加载数据
                 this.loadData();
                 // 注册 Service Worker（PWA 支持）
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('sw.js').catch(() => {});
                 }
-                // 启动自动刷新（每30秒从服务器重新加载数据）
-                this.startAutoRefresh();
             },
             methods: {
+                // 初始化 LeanCloud
+                initLeanCloud() {
+                    // TODO: 请替换为您的 LeanCloud 应用凭证
+                    const APP_ID = 'LUSHCmGmYprFyHdyUKNlcsq8-gzGzoHsz'; // 请替换
+                    const APP_KEY = 'QSzroCqiHsqFANZsM7VIuObn'; // 请替换
+                    const SERVER_URL = 'https://lushcmgm.lc-cn-n1-shared.com'; // 国际版需要，国内版可以省略
+                    
+                    try {
+                        AV.init({
+                            appId: APP_ID,
+                            appKey: APP_KEY,
+                            serverURL: SERVER_URL
+                        });
+                        console.log('✅ LeanCloud 初始化成功');
+                    } catch (error) {
+                        console.error('❌ LeanCloud 初始化失败:', error);
+                        alert('❗ LeanCloud 配置错误，请检查 APP_ID 和 APP_KEY');
+                    }
+                },
                 getDifficultyClass(difficulty) {
                     if (difficulty === '简单') return 'easy';
                     if (difficulty === '中等') return 'medium';
                     if (difficulty === '困难') return 'hard';
                     return '';
                 },
-                loadData() {
-                    // 始终从 data.json 加载最新数据（实现多设备同步）
-                    // localStorage 仅作为临时缓存，防止页面刷新时数据丢失
-                    this.loadFromJsonFile();
-                    
-                    // 同时恢复购物车（购物车是临时数据，不需要同步）
-                    const savedCart = localStorage.getItem('cart');
-                    if (savedCart) {
-                        this.cart = JSON.parse(savedCart);
-                    }
-                },
-                async loadFromJsonFile() {
+                async loadData() {
                     try {
-                        const response = await fetch('data.json?t=' + Date.now()); // 防止缓存
-                        if (response.ok) {
-                            const data = await response.json();
-                            console.log('✅ 成功从 data.json 加载数据');
+                        console.log('🔄 开始从 LeanCloud 加载数据...');
+                        
+                        // 加载菜品
+                        const Dish = AV.Object.extend('Dish');
+                        const dishQuery = new AV.Query(Dish);
+                        dishQuery.limit(1000); // 最多加载 1000 条
+                        const dishResults = await dishQuery.find();
+                        this.dishes = dishResults.map(dish => {
+                            // 处理图片字段：可能是字符串、AV.File 对象或 undefined
+                            let imageValue = dish.get('image');
                             
-                            if (data.dishes) {
-                                this.dishes = data.dishes;
-                                // 不再保存到 localStorage
+                            if (imageValue && typeof imageValue === 'object' && imageValue.url) {
+                                // 如果是 AV.File 对象，获取 URL
+                                imageValue = imageValue.url();
+                            } else if (typeof imageValue !== 'string') {
+                                // undefined 或其他情况设为空
+                                imageValue = '';
                             }
-                            if (data.orders) {
-                                this.orders = data.orders;
-                                // 不再保存到 localStorage
-                            }
-                            if (data.wishes) {
-                                this.wishes = data.wishes;
-                                this.saveWishes();
-                            }
-                        } else {
-                            console.log('⚠️ data.json 不存在，使用默认数据');
-                            this.loadDefaultData();
+                            
+                            return {
+                                id: dish.get('dishId') || dish.id,
+                                name: dish.get('name'),
+                                category: dish.get('category'),
+                                image: imageValue || '',
+                                tags: dish.get('tags') || [],
+                                difficulty: dish.get('difficulty') || '简单',
+                                steps: dish.get('steps') || ''
+                            };
+                        });
+                        
+                        // 加载订单
+                        const Order = AV.Object.extend('Order');
+                        const orderQuery = new AV.Query(Order);
+                        orderQuery.descending('createdAt');
+                        orderQuery.limit(1000);
+                        const orderResults = await orderQuery.find();
+                        this.orders = orderResults.map(order => ({
+                            id: order.get('orderId') || order.id,
+                            items: order.get('items') || [],
+                            total: order.get('total') || 0,
+                            status: order.get('status') || 'pending',
+                            createdAt: order.get('createdAt') ? order.get('createdAt').toLocaleString('zh-CN') : ''
+                        }));
+                        
+                        // 加载心愿
+                        const Wish = AV.Object.extend('Wish');
+                        const wishQuery = new AV.Query(Wish);
+                        wishQuery.descending('createdAt');
+                        wishQuery.limit(1000);
+                        const wishResults = await wishQuery.find();
+                        this.wishes = wishResults.map(wish => ({
+                            id: wish.get('wishId') || wish.id,
+                            name: wish.get('name'),
+                            status: wish.get('status') || 'pending',
+                            createdAt: wish.get('createdAt') ? wish.get('createdAt').toLocaleString('zh-CN') : ''
+                        }));
+                        
+                        console.log(`✅ 数据加载成功: ${this.dishes.length} 道菜品, ${this.orders.length} 个订单, ${this.wishes.length} 个心愿`);
+                        
+                        // 恢复购物车（本地数据）
+                        const savedCart = localStorage.getItem('cart');
+                        if (savedCart) {
+                            this.cart = JSON.parse(savedCart);
                         }
                     } catch (error) {
-                        console.log('⚠️ 无法加载 data.json，使用默认数据', error);
+                        console.error('❌ 从 LeanCloud 加载数据失败:', error);
+                        alert('加载数据失败，请检查网络连接或 LeanCloud 配置');
+                        // 加载默认数据
                         this.loadDefaultData();
                     }
                 },
+
                 loadDefaultData() {
                     // 默认示例数据
                     this.dishes = [
@@ -2564,11 +2577,11 @@ git push</pre>
                 closeWishModal() {
                     this.showWishModal = false;
                 },
-                openDataModal() {
-                    this.showDataModal = true;
+                exportDataDialog() {
+                    this.showExportDialog = true;
                 },
-                closeDataModal() {
-                    this.showDataModal = false;
+                closeExportDialog() {
+                    this.showExportDialog = false;
                 },
                 toggleCartDrawer() {
                     this.showCartDrawer = !this.showCartDrawer;
@@ -2576,13 +2589,19 @@ git push</pre>
                 closeCartDrawer() {
                     this.showCartDrawer = false;
                 },
-                addDish() {
+                async addDish() {
+                    if (!this.newDish.name || !this.newDish.category) {
+                        alert('请填写菜名和分类');
+                        return;
+                    }
+                    
                     const tags = this.newDish.tagsStr
                         ? this.newDish.tagsStr.split(',').map(t => t.trim()).filter(t => t)
                         : [];
                     
+                    const dishId = Date.now();
                     const dish = {
-                        id: Date.now(),
+                        id: dishId,
                         name: this.newDish.name,
                         category: this.newDish.category,
                         image: this.newDish.image,
@@ -2591,29 +2610,91 @@ git push</pre>
                         steps: this.newDish.steps
                     };
                     
-                    this.dishes.push(dish);
-                    this.saveDishes();
-                    
-                    // 重置表单
-                    this.newDish = {
-                        name: '',
-                        category: '',
-                        image: '',
-                        tagsStr: '',
-                        difficulty: '简单',
-                        steps: ''
-                    };
-                    // 切换到新增菜品的分类
-                    this.currentCategory = dish.category;
-                    // 切换到管理标签页
-                    this.adminTab = 'manage';
-                    
-                    alert('菜品添加成功！');
+                    try {
+                        let imageFile = null;
+                        
+                        // 如果有图片，将 Base64 转换为 LeanCloud File
+                        if (dish.image) {
+                            // 提取 Base64 数据
+                            const base64Data = dish.image.split(',')[1] || dish.image;
+                            const contentType = dish.image.match(/data:(.*?);/)?.[1] || 'image/png';
+                            
+                            // 转换为 Blob
+                            const byteCharacters = atob(base64Data);
+                            const byteArrays = [];
+                            for (let i = 0; i < byteCharacters.length; i++) {
+                                byteArrays.push(byteCharacters.charCodeAt(i));
+                            }
+                            const blob = new Blob([new Uint8Array(byteArrays)], { type: contentType });
+                            
+                            // 创建 LeanCloud File
+                            const fileName = `dish_${dishId}.png`;
+                            imageFile = new AV.File(fileName, blob);
+                            await imageFile.save();
+                            
+                            console.log('✅ 图片已上传到 LeanCloud');
+                        }
+                        
+                        // 保存到 LeanCloud
+                        const Dish = AV.Object.extend('Dish');
+                        const dishObj = new Dish();
+                        dishObj.set('dishId', dishId);
+                        dishObj.set('name', dish.name);
+                        dishObj.set('category', dish.category);
+                        dishObj.set('image', imageFile); // 保存 File 对象，而不是 Base64
+                        dishObj.set('tags', dish.tags);
+                        dishObj.set('difficulty', dish.difficulty);
+                        dishObj.set('steps', dish.steps);
+                        await dishObj.save();
+                        
+                        // 更新本地数据为图片 URL
+                        if (imageFile) {
+                            dish.image = imageFile.url();
+                        }
+                        
+                        // 添加到本地列表
+                        this.dishes.push(dish);
+                        
+                        // 重置表单
+                        this.newDish = {
+                            name: '',
+                            category: '',
+                            image: '',
+                            tagsStr: '',
+                            difficulty: '简单',
+                            steps: ''
+                        };
+                        
+                        // 切换到新增菜品的分类
+                        this.currentCategory = dish.category;
+                        // 切换到管理标签页
+                        this.adminTab = 'manage';
+                        
+                        alert('✅ 菜品添加成功！');
+                    } catch (error) {
+                        console.error('❌ 添加菜品失败:', error);
+                        alert('添加失败，请检查网络连接');
+                    }
                 },
-                deleteDish(id) {
-                    if (confirm('确定要删除这道菜吗？')) {
+                async deleteDish(id) {
+                    if (!confirm('确定要删除这道菜吗？')) return;
+                    
+                    try {
+                        // 从 LeanCloud 删除
+                        const Dish = AV.Object.extend('Dish');
+                        const query = new AV.Query(Dish);
+                        query.equalTo('dishId', id);
+                        const dishObj = await query.first();
+                        if (dishObj) {
+                            await dishObj.destroy();
+                        }
+                        
+                        // 从本地删除
                         this.dishes = this.dishes.filter(d => d.id !== id);
-                        this.saveDishes();
+                        alert('✅ 删除成功！');
+                    } catch (error) {
+                        console.error('❌ 删除菜品失败:', error);
+                        alert('删除失败，请检查网络连接');
                     }
                 },
                 startEditDish(dish) {
@@ -2638,28 +2719,82 @@ git push</pre>
                         steps: ''
                     };
                 },
-                saveEdit() {
+                async saveEdit() {
                     if (!this.editingDish.name || !this.editingDish.category) {
                         alert('请填写菜名和分类');
                         return;
                     }
                     
                     const dish = this.dishes.find(d => d.id === this.editingDishId);
-                    if (dish) {
-                        const tags = this.editingDish.tagsStr
-                            ? this.editingDish.tagsStr.split(',').map(t => t.trim()).filter(t => t)
-                            : [];
+                    if (!dish) return;
+                    
+                    const tags = this.editingDish.tagsStr
+                        ? this.editingDish.tagsStr.split(',').map(t => t.trim()).filter(t => t)
+                        : [];
+                    
+                    try {
+                        let imageFile = null;
                         
+                        // 如果图片有更改且是 Base64 格式，转换为 LeanCloud File
+                        if (this.editingDish.image && this.editingDish.image.startsWith('data:')) {
+                            const base64Data = this.editingDish.image.split(',')[1] || this.editingDish.image;
+                            const contentType = this.editingDish.image.match(/data:(.*?);/)?.[1] || 'image/png';
+                            
+                            const byteCharacters = atob(base64Data);
+                            const byteArrays = [];
+                            for (let i = 0; i < byteCharacters.length; i++) {
+                                byteArrays.push(byteCharacters.charCodeAt(i));
+                            }
+                            const blob = new Blob([new Uint8Array(byteArrays)], { type: contentType });
+                            
+                            const fileName = `dish_${this.editingDishId}_${Date.now()}.png`;
+                            imageFile = new AV.File(fileName, blob);
+                            await imageFile.save();
+                            
+                            console.log('✅ 图片已更新到 LeanCloud');
+                        }
+                        
+                        // 更新 LeanCloud
+                        const Dish = AV.Object.extend('Dish');
+                        const query = new AV.Query(Dish);
+                        query.equalTo('dishId', this.editingDishId);
+                        const dishObj = await query.first();
+                        
+                        if (dishObj) {
+                            dishObj.set('name', this.editingDish.name);
+                            dishObj.set('category', this.editingDish.category);
+                            // 如果有新图片，使用 File 对象；否则保持原样
+                            if (imageFile) {
+                                dishObj.set('image', imageFile);
+                            } else if (this.editingDish.image) {
+                                // 如果是 URL，不变（不重新设置）
+                            } else {
+                                // 如果清空图片
+                                dishObj.set('image', null);
+                            }
+                            dishObj.set('tags', tags);
+                            dishObj.set('difficulty', this.editingDish.difficulty);
+                            dishObj.set('steps', this.editingDish.steps);
+                            await dishObj.save();
+                        }
+                        
+                        // 更新本地数据
                         dish.name = this.editingDish.name;
                         dish.category = this.editingDish.category;
-                        dish.image = this.editingDish.image;
+                        if (imageFile) {
+                            dish.image = imageFile.url();
+                        } else {
+                            dish.image = this.editingDish.image;
+                        }
                         dish.tags = tags;
                         dish.difficulty = this.editingDish.difficulty;
                         dish.steps = this.editingDish.steps;
                         
-                        this.saveDishes();
                         this.cancelEdit();
-                        alert('菜品修改成功！');
+                        alert('✅ 菜品修改成功！');
+                    } catch (error) {
+                        console.error('❌ 修改菜品失败:', error);
+                        alert('修改失败，请检查网络连接');
                     }
                 },
                 handleEditImageUpload(event) {
@@ -2700,254 +2835,232 @@ git push</pre>
                         this.removeFromCart(item.id);
                     }
                 },
-                placeOrder() {
+                async placeOrder() {
                     if (this.cart.length === 0) {
                         alert('🛒 购物车是空的，快去添加菜品吧！');
                         return;
                     }
                     
+                    const orderId = Date.now();
                     const order = {
-                        id: Date.now(),
+                        id: orderId,
                         items: [...this.cart],
                         total: this.totalItems,
                         createdAt: new Date().toLocaleString('zh-CN'),
                         status: 'pending'
                     };
                     
-                    this.orders.push(order);
-                    this.saveOrders();
-                    
-                    // 清空购物车
-                    this.cart = [];
-                    this.saveCart();
-                    this.closeCartDrawer();
-                    
-                    // 显示成功提示
-                    alert(`✅ 下单成功！
+                    try {
+                        // 保存到 LeanCloud
+                        const Order = AV.Object.extend('Order');
+                        const orderObj = new Order();
+                        orderObj.set('orderId', orderId);
+                        orderObj.set('items', order.items);
+                        orderObj.set('total', order.total);
+                        orderObj.set('status', order.status);
+                        await orderObj.save();
+                        
+                        // 添加到本地列表
+                        this.orders.push(order);
+                        
+                        // 清空购物车
+                        this.cart = [];
+                        this.saveCart();
+                        this.closeCartDrawer();
+                        
+                        // 显示成功提示
+                        alert(`✅ 下单成功！
 
 🍲 共 ${order.total} 道菜
 🕒 时间：${order.createdAt}
 
 购物车已自动清空`);
-                },
-                completeOrder(orderId) {
-                    const order = this.orders.find(o => o.id === orderId);
-                    if (order) {
-                        order.status = 'completed';
-                        this.saveOrders();
+                    } catch (error) {
+                        console.error('❌ 下单失败:', error);
+                        alert('下单失败，请检查网络连接');
                     }
                 },
-                deleteOrder(orderId) {
-                    if (confirm('确定要删除这个订单吗？')) {
+                async completeOrder(orderId) {
+                    try {
+                        // 更新 LeanCloud
+                        const Order = AV.Object.extend('Order');
+                        const query = new AV.Query(Order);
+                        query.equalTo('orderId', orderId);
+                        const orderObj = await query.first();
+                        if (orderObj) {
+                            orderObj.set('status', 'completed');
+                            await orderObj.save();
+                        }
+                        
+                        // 更新本地数据
+                        const order = this.orders.find(o => o.id === orderId);
+                        if (order) {
+                            order.status = 'completed';
+                        }
+                    } catch (error) {
+                        console.error('❌ 更新订单失败:', error);
+                        alert('更新失败，请检查网络连接');
+                    }
+                },
+                async deleteOrder(orderId) {
+                    if (!confirm('确定要删除这个订单吗？')) return;
+                    
+                    try {
+                        // 从 LeanCloud 删除
+                        const Order = AV.Object.extend('Order');
+                        const query = new AV.Query(Order);
+                        query.equalTo('orderId', orderId);
+                        const orderObj = await query.first();
+                        if (orderObj) {
+                            await orderObj.destroy();
+                        }
+                        
+                        // 从本地删除
                         this.orders = this.orders.filter(o => o.id !== orderId);
-                        this.saveOrders();
+                    } catch (error) {
+                        console.error('❌ 删除订单失败:', error);
+                        alert('删除失败，请检查网络连接');
                     }
                 },
                 saveDishes() {
-                    // 不保存到 localStorage（图片太大会超出限制）
-                    // localStorage.setItem('dishes', JSON.stringify(this.dishes));
-                    this.autoSaveToServer(); // 只保存到服务器
+                    // 不保存到 localStorage，直接保存到 LeanCloud
+                    // 注意：菜品已经在 addDish/saveEdit/deleteDish 中单独保存，这里不需要额外操作
+                    console.log('💾 菜品已更新');
                 },
                 saveCart() {
                     localStorage.setItem('cart', JSON.stringify(this.cart));
                 },
-                saveOrders() {
-                    // 不保存到 localStorage（订单包含菜品图片，太大）
-                    // localStorage.setItem('orders', JSON.stringify(this.orders));
-                    this.autoSaveToServer(); // 只保存到服务器
+                async saveOrders() {
+                    // 订单已经在 placeOrder/completeOrder/deleteOrder 中单独保存
+                    console.log('💾 订单已更新');
                 },
-                addWish() {
+                async addWish() {
                     if (!this.newWish.name.trim()) {
                         alert('请输入想吃的菜名');
                         return;
                     }
                     
+                    const wishId = Date.now();
                     const wish = {
-                        id: Date.now(),
+                        id: wishId,
                         name: this.newWish.name.trim(),
                         note: this.newWish.note.trim(),
                         status: 'pending',
                         createdAt: new Date().toLocaleString('zh-CN')
                     };
                     
-                    this.wishes.push(wish);
-                    this.saveWishes();
-                    
-                    this.newWish = { name: '', note: '' };
-                },
-                updateWishStatus(wishId, newStatus) {
-                    const wish = this.wishes.find(w => w.id === wishId);
-                    if (wish) {
-                        wish.status = newStatus;
-                        this.saveWishes();
+                    try {
+                        // 保存到 LeanCloud
+                        const Wish = AV.Object.extend('Wish');
+                        const wishObj = new Wish();
+                        wishObj.set('wishId', wishId);
+                        wishObj.set('name', wish.name);
+                        wishObj.set('status', wish.status);
+                        await wishObj.save();
+                        
+                        // 添加到本地列表
+                        this.wishes.push(wish);
+                        this.newWish = { name: '', note: '' };
+                        alert('✅ 心愿添加成功！');
+                    } catch (error) {
+                        console.error('❌ 添加心愿失败:', error);
+                        alert('添加失败，请检查网络连接');
                     }
                 },
-                deleteWish(wishId) {
-                    if (confirm('确定要删除这个心愿吗？')) {
+                async updateWishStatus(wishId, newStatus) {
+                    try {
+                        // 更新 LeanCloud
+                        const Wish = AV.Object.extend('Wish');
+                        const query = new AV.Query(Wish);
+                        query.equalTo('wishId', wishId);
+                        const wishObj = await query.first();
+                        if (wishObj) {
+                            wishObj.set('status', newStatus);
+                            await wishObj.save();
+                        }
+                        
+                        // 更新本地数据
+                        const wish = this.wishes.find(w => w.id === wishId);
+                        if (wish) {
+                            wish.status = newStatus;
+                        }
+                    } catch (error) {
+                        console.error('❌ 更新心愿失败:', error);
+                        alert('更新失败，请检查网络连接');
+                    }
+                },
+                async deleteWish(wishId) {
+                    if (!confirm('确定要删除这个心愿吗？')) return;
+                    
+                    try {
+                        // 从 LeanCloud 删除
+                        const Wish = AV.Object.extend('Wish');
+                        const query = new AV.Query(Wish);
+                        query.equalTo('wishId', wishId);
+                        const wishObj = await query.first();
+                        if (wishObj) {
+                            await wishObj.destroy();
+                        }
+                        
+                        // 从本地删除
                         this.wishes = this.wishes.filter(w => w.id !== wishId);
-                        this.saveWishes();
+                    } catch (error) {
+                        console.error('❌ 删除心愿失败:', error);
+                        alert('删除失败，请检查网络连接');
                     }
                 },
-                saveWishes() {
-                    localStorage.setItem('wishes', JSON.stringify(this.wishes));
-                    this.autoSaveToServer(); // 自动保存到服务器
-                },
-                async autoSaveToServer() {
-                    // 防抖：避免频繁请求
-                    if (this.saveTimeout) {
-                        clearTimeout(this.saveTimeout);
-                    }
-                    
-                    this.saveTimeout = setTimeout(async () => {
-                        try {
-                            const data = {
-                                dishes: this.dishes,
-                                orders: this.orders,
-                                wishes: this.wishes
-                            };
-                            
-                            // 使用相对路径，自动适配 localhost 和 Netlify
-                            const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-                                ? 'http://localhost:3000/api/save-data'
-                                : '/api/save-data'; // Netlify 需要部署 serverless 函数
-                            
-                            const response = await fetch(apiUrl, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify(data)
-                            });
-                            
-                            const result = await response.json();
-                            
-                            if (result.success) {
-                                console.log('✅ 数据已自动保存到 data.json');
-                            } else {
-                                console.error('⚠️ 保存失败:', result.message);
-                            }
-                        } catch (error) {
-                            // 静默失败，不影响用户体验
-                            console.log('⚠️ 无法连接到服务器，数据仅保存在内存中');
-                        }
-                    }, 1000); // 1秒后保存，避免频繁请求
-                },
-                startAutoRefresh() {
-                    // 每30秒自动从服务器重新加载数据
-                    this.refreshInterval = setInterval(async () => {
-                        try {
-                            const response = await fetch('data.json?t=' + Date.now()); // 防止缓存
-                            if (response.ok) {
-                                const data = await response.json();
-                                
-                                // 对比订单数量，如果有新订单则更新
-                                const oldOrderCount = this.orders.length;
-                                const newOrderCount = data.orders?.length || 0;
-                                
-                                if (newOrderCount > oldOrderCount) {
-                                    // 有新订单
-                                    this.orders = data.orders;
-                                    console.log(`🔔 检测到 ${newOrderCount - oldOrderCount} 个新订单`);
-                                } else if (newOrderCount < oldOrderCount || newOrderCount !== oldOrderCount) {
-                                    // 订单被删除或修改
-                                    this.orders = data.orders;
-                                }
-                                
-                                // 更新菜品和心愿列表
-                                if (data.dishes) {
-                                    this.dishes = data.dishes;
-                                }
-                                if (data.wishes) {
-                                    this.wishes = data.wishes;
-                                }
-                            }
-                        } catch (error) {
-                            // 静默失败
-                            console.log('⚠️ 自动刷新失败');
-                        }
-                    }, 30000); // 30秒
-                },
-                exportData() {
-                    const data = {
-                        version: '1.0',
-                        exportTime: new Date().toLocaleString('zh-CN'),
-                        dishes: this.dishes,
-                        orders: this.orders,
-                        wishes: this.wishes
-                    };
-                    
-                    const dataStr = JSON.stringify(data, null, 2);
-                    const blob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `caipu-data-${new Date().getTime()}.json`;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                    
-                    alert('数据导出成功！\n文件已下载。');
-                },
-                importData(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    
-                    if (!confirm('导入数据将覆盖当前所有数据，是否继续？\n\n建议先导出当前数据作为备份！')) {
-                        event.target.value = '';
-                        return;
-                    }
-                    
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const data = JSON.parse(e.target.result);
-                            
-                            if (data.dishes) {
-                                this.dishes = data.dishes;
-                                this.saveDishes();
-                            }
-                            if (data.orders) {
-                                this.orders = data.orders;
-                                this.saveOrders();
-                            }
-                            if (data.wishes) {
-                                this.wishes = data.wishes;
-                                this.saveWishes();
-                            }
-                            
-                            alert(`数据导入成功！
 
-菜品：${data.dishes?.length || 0} 道
-订单：${data.orders?.length || 0} 个
-心愿：${data.wishes?.length || 0} 个`);
-                            this.closeDataModal();
-                        } catch (error) {
-                            alert('文件格式错误，请选择正确的 JSON 文件！');
-                        }
-                        event.target.value = '';
-                    };
-                    reader.readAsText(file);
-                },
-                clearAllData() {
-                    if (!confirm('确定要清空所有数据吗？\n\n这将删除：\n- 所有菜品\n- 所有订单\n- 所有心愿\n\n此操作不可恢复！')) {
-                        return;
+                // 确认导出数据
+                async confirmExportData() {
+                    try {
+                        // 从云端重新加载最新数据
+                        await this.loadData();
+                        
+                        // 准备导出数据
+                        const exportData = {
+                            version: '2.0',
+                            exportTime: new Date().toLocaleString('zh-CN'),
+                            source: 'LeanCloud',
+                            dishes: this.dishes.map(dish => ({
+                                id: dish.id,
+                                name: dish.name,
+                                category: dish.category,
+                                image: dish.image || '',
+                                tags: dish.tags || [],
+                                difficulty: dish.difficulty || '简单',
+                                steps: dish.steps || '',
+                                quantity: dish.quantity || 0
+                            })),
+                            orders: this.orders.map(order => ({
+                                id: order.id,
+                                items: order.items,
+                                total: order.total,
+                                status: order.status,
+                                createdAt: order.createdAt
+                            })),
+                            wishes: this.wishes.map(wish => ({
+                                name: wish.name,
+                                status: wish.status,
+                                createdAt: wish.createdAt
+                            }))
+                        };
+                        
+                        // 创建下载链接
+                        const dataStr = JSON.stringify(exportData, null, 2);
+                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(dataBlob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `菜谱数据备份_${new Date().getTime()}.json`;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                        
+                        this.closeExportDialog();
+                        alert('✅ 数据导出成功！\n\n📁 文件已保存到下载文件夹\n💡 建议定期备份数据以确保安全');
+                    } catch (error) {
+                        console.error('导出失败:', error);
+                        alert('❌ 导出失败，请检查网络连接');
                     }
-                    
-                    if (!confirm('最后确认：真的要清空吗？')) {
-                        return;
-                    }
-                    
-                    this.dishes = [];
-                    this.orders = [];
-                    this.wishes = [];
-                    this.cart = [];
-                    
-                    localStorage.removeItem('dishes');
-                    localStorage.removeItem('orders');
-                    localStorage.removeItem('wishes');
-                    localStorage.removeItem('cart');
-                    
-                    alert('所有数据已清空！');
-                    this.closeDataModal();
                 }
             }
         }).mount('#app');
